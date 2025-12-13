@@ -6,9 +6,9 @@
 
 ![](./img/joy.jpg)
 
-### 🚧 BOLT #11
+### 🚧 bolt11
 
-The first milestone is to create a valid BOLT11 payment request that a fully fledged lightning node could pay if:
+The first milestone is to create a valid bolt11 payment request that a fully fledged lightning node could pay if:
 
 - there was a path
 - the recipient node would actually know what to do with the incoming payment
