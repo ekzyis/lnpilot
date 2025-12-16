@@ -55,8 +55,8 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("Please consider supporting this project"),
-		WithExpiry(0),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+		WithExpiry(0),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -125,8 +125,8 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescriptionHash(longDescriptionHash),
-		WithExpiry(0),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+		WithExpiry(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
