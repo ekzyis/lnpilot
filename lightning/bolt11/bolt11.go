@@ -92,7 +92,7 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 		option(pr)
 	}
 
-	if pr.PaymentHash == (lntypes.Hash{}) {
+	if pr.PaymentHash.IsZero() {
 		var preimage lntypes.Preimage
 		rand.Read(preimage[:])
 		pr.PaymentHash = preimage.Hash()
