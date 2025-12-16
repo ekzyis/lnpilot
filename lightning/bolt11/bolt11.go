@@ -17,6 +17,7 @@ type PaymentRequest struct {
 	Network     lntypes.Network
 	Msats       lntypes.MilliSatoshi
 	Timestamp   time.Time
+	Expiry      time.Duration
 	PaymentHash lntypes.Hash
 
 	// PaymentSecret makes sure the recipient can tell if the onion payload was
@@ -67,6 +68,8 @@ const (
 	fieldTypeD byte = 13
 	// fieldTypeH is the field containing the description hash.
 	fieldTypeH byte = 23
+	// fieldTypeX is the field containing the expiry.
+	fieldTypeX byte = 6
 	// fieldType9 is the field containing the feature bits.
 	fieldType9 byte = 5
 
@@ -84,6 +87,7 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 	pr := &PaymentRequest{
 		Msats:         lntypes.MilliSatoshi(msats),
 		Timestamp:     time.Now(),
+		Expiry:        time.Hour,
 		Network:       lntypes.NetworkMainnet,
 		PaymentSecret: paymentSecret,
 	}
@@ -146,6 +150,12 @@ func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 		}
 		fv := bolt09.NewFeatureVector(bolt09Bits...)
 		pr.Features = *fv
+	}
+}
+
+func WithExpiry(expiry time.Duration) func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		pr.Expiry = expiry
 	}
 }
 
@@ -267,6 +277,14 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 		}
 	} else {
 		return fmt.Errorf("one of description or description hash must be present")
+	}
+
+	// expiry (x)
+	if pr.Expiry != 0 {
+		err = writeTaggedField(buf, fieldTypeX, bech32.NewBase32UintEncoder(uint(pr.Expiry.Seconds())))
+		if err != nil {
+			return fmt.Errorf("failed to write expiry: %v", err)
+		}
 	}
 
 	// feature bits (9)
