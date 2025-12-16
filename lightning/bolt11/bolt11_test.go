@@ -46,6 +46,7 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("Please consider supporting this project"),
+		WithExpiry(0),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -53,6 +54,27 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(
 		"lnbc1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaq9qrsgq357wnc5r2ueh7ck6q93dj32dlqnls087fxdwk8qakdyafkq3yap9us6v52vjjsrvywa6rt52cm9r9zqt8r2t7mlcwspyetp5h2tztugp9lfyql",
+		encoded,
+	)
+}
+
+func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
+	assert := assert.New(t)
+
+	pr := NewPaymentRequest(
+		250000000,
+		WithTimestamp(timestamp),
+		WithPaymentSecret([32]byte(paymentSecretBytes)),
+		WithPaymentHash([32]byte(paymentHashBytes)),
+		WithDescription("1 cup coffee"),
+		WithExpiry(60*time.Second),
+		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+	)
+	encoded, err := pr.EncodeBech32(&TestSigner{})
+
+	assert.NoError(err)
+	assert.Equal(
+		"lnbc2500u1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpu9qrsgquk0rl77nj30yxdy8j9vdx85fkpmdla2087ne0xh8nhedh8w27kyke0lp53ut353s06fv3qfegext0eh0ymjpf39tuven09sam30g4vgpfna3rh",
 		encoded,
 	)
 }

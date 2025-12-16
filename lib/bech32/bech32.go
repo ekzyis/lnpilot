@@ -24,6 +24,18 @@ func NewBase32StringEncoder(data string) Base32BytesEncoder {
 	return Base32BytesEncoder{data: []byte(data)}
 }
 
+type Base32UintEncoder struct {
+	num uint
+}
+
+func NewBase32UintEncoder(num uint) Base32UintEncoder {
+	return Base32UintEncoder{num: num}
+}
+
+func (e Base32UintEncoder) EncodeBase32() ([]byte, error) {
+	return uintToVarBase32(e.num), nil
+}
+
 // Encode encodes base32-encoded data into a bech32 string.
 func Encode(hrp string, data []byte) (string, error) {
 	return bech32.Encode(hrp, data)
@@ -32,6 +44,17 @@ func Encode(hrp string, data []byte) (string, error) {
 // ConvertBits converts a byte array from one bit length to another.
 func ConvertBits(data []byte, fromBits, toBits uint8, pad bool) ([]byte, error) {
 	return bech32.ConvertBits(data, fromBits, toBits, pad)
+}
+
+// uintToVarBase32 converts a uint to a variable length
+// base32-encoded byte array in big-endian order.
+func uintToVarBase32(num uint) []byte {
+	var numBase32 []byte
+	for num > 0 {
+		numBase32 = append([]byte{byte(num & 0b11111)}, numBase32...)
+		num >>= 5
+	}
+	return numBase32
 }
 
 // WriteUintBase32 writes a uint value to the buffer in base32 encoding and big-endian order.
