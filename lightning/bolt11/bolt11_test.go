@@ -12,12 +12,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	timestamp             = time.Unix(1496314658, 0)
+	privKeyBytes, _       = hex.DecodeString("e126f68f7eafcc8b74f54d269fe206be715000f94dac067d1c04a8ca3b2db734")
+	paymentSecretBytes, _ = hex.DecodeString("1111111111111111111111111111111111111111111111111111111111111111")
+	paymentHashBytes, _   = hex.DecodeString("0001020304050607080900010203040506070809000102030405060708090102")
+)
+
 // TestSigner generates deterministic compact ECDSA signatures
 // over secp256k1 using RFC6979 and HMAC-SHA256.
 type TestSigner struct{}
 
 func (s *TestSigner) CompactECDSASign(msg []byte) (secp256k1.CompactECDSASignature, error) {
-	privKeyBytes, _ := hex.DecodeString("e126f68f7eafcc8b74f54d269fe206be715000f94dac067d1c04a8ca3b2db734")
 	privKey := _secp256k1.PrivKeyFromBytes(privKeyBytes)
 
 	hash := sha256.Sum256(msg)
@@ -34,14 +40,11 @@ func (s *TestSigner) CompactECDSASign(msg []byte) (secp256k1.CompactECDSASignatu
 func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 	assert := assert.New(t)
 
-	paymentSecret, _ := hex.DecodeString("1111111111111111111111111111111111111111111111111111111111111111")
-	paymentHash, _ := hex.DecodeString("0001020304050607080900010203040506070809000102030405060708090102")
-
 	pr := NewPaymentRequest(
 		0,
-		WithTimestamp(time.Unix(1496314658, 0)),
-		WithPaymentSecret([32]byte(paymentSecret)),
-		WithPaymentHash([32]byte(paymentHash)),
+		WithTimestamp(timestamp),
+		WithPaymentSecret([32]byte(paymentSecretBytes)),
+		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("Please consider supporting this project"),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 	)
