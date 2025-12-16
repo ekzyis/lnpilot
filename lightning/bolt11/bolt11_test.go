@@ -43,6 +43,10 @@ func (s *TestSigner) CompactECDSASign(msg []byte) (secp256k1.CompactECDSASignatu
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
+	// Please make a donation of any amount using payment_hash
+	// 0001020304050607080900010203040506070809000102030405060708090102
+	// to me @03e7156ae33b0a208d0744199163177e909e80176e55d97a2f221ede0f934dd9ad
+
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -64,6 +68,8 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
+	// Please send $3 for a cup of coffee to the same peer, within one minute
+
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -85,6 +91,9 @@ func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
+	// Please send 0.0025 BTC for a cup of nonsense (ナンセンス 1杯) to the same peer,
+	// within one minute
+
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -106,6 +115,8 @@ func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
+	// Now send $24 for an entire list of things (hashed)
+
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
