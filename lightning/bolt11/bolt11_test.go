@@ -62,7 +62,7 @@ func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
-		250000000,
+		250_000_000,
 		WithTimestamp(timestamp),
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithPaymentHash([32]byte(paymentHashBytes)),
@@ -83,7 +83,7 @@ func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
-		250000000,
+		250_000_000,
 		WithTimestamp(timestamp),
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithPaymentHash([32]byte(paymentHashBytes)),
