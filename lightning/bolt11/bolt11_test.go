@@ -17,6 +17,11 @@ var (
 	privKeyBytes, _       = hex.DecodeString("e126f68f7eafcc8b74f54d269fe206be715000f94dac067d1c04a8ca3b2db734")
 	paymentSecretBytes, _ = hex.DecodeString("1111111111111111111111111111111111111111111111111111111111111111")
 	paymentHashBytes, _   = hex.DecodeString("0001020304050607080900010203040506070809000102030405060708090102")
+
+	// this description is 200 bytes long, which isn't long enough to fall back to hashing,
+	// so we hash it ourselves to pass the test vectors
+	longDescription     = "One piece of chocolate cake, one icecream cone, one pickle, one slice of swiss cheese, one slice of salami, one lollypop, one piece of cherry pie, one sausage, one cupcake, and one slice of watermelon"
+	longDescriptionHash = sha256.Sum256([]byte(longDescription))
 )
 
 // TestSigner generates deterministic compact ECDSA signatures
@@ -96,6 +101,28 @@ func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(
 		"lnbc2500u1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpquwpc4curk03c9wlrswe78q4eyqc7d8d0xqzpu9qrsgqhtjpauu9ur7fw2thcl4y9vfvh4m9wlfyz2gem29g5ghe2aak2pm3ps8fdhtceqsaagty2vph7utlgj48u0ged6a337aewvraedendscp573dxr",
+		encoded,
+	)
+}
+
+func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
+	assert := assert.New(t)
+
+	pr := NewPaymentRequest(
+		2_000_000_000,
+		WithTimestamp(timestamp),
+		WithPaymentSecret([32]byte(paymentSecretBytes)),
+		WithPaymentHash([32]byte(paymentHashBytes)),
+		WithDescriptionHash(longDescriptionHash),
+		WithExpiry(0),
+		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+	)
+
+	encoded, err := pr.EncodeBech32(&TestSigner{})
+
+	assert.NoError(err)
+	assert.Equal(
+		"lnbc20m1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqhp58yjmdan79s6qqdhdzgynm4zwqd5d7xmw5fk98klysy043l2ahrqs9qrsgq7ea976txfraylvgzuxs8kgcw23ezlrszfnh8r6qtfpr6cxga50aj6txm9rxrydzd06dfeawfk6swupvz4erwnyutnjq7x39ymw6j38gp7ynn44",
 		encoded,
 	)
 }

@@ -141,6 +141,12 @@ func WithDescription(description string) func(*PaymentRequest) {
 	}
 }
 
+func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		pr.DescriptionHash = lntypes.Hash(descriptionHash)
+	}
+}
+
 func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		// Go does not allow a direct cast between []FeatureBit and []bolt09.FeatureBit
