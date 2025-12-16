@@ -28,6 +28,7 @@ type PaymentRequest struct {
 	Description     string
 	DescriptionHash lntypes.Hash
 	Features        bolt09.FeatureVector
+	FallbackAddress string
 }
 
 // bolt09 feature bits that can be set in a bolt11 payment request.
@@ -72,6 +73,8 @@ const (
 	fieldTypeX byte = 6
 	// fieldType9 is the field containing the feature bits.
 	fieldType9 byte = 5
+	// fieldTypeF is the field containing the fallback address.
+	fieldTypeF byte = 9
 
 	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
 	// or 640 bytes of data in a single field.
@@ -162,6 +165,12 @@ func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 func WithExpiry(expiry time.Duration) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.Expiry = expiry
+	}
+}
+
+func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		pr.FallbackAddress = fallbackAddress
 	}
 }
 
@@ -291,6 +300,12 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 		if err != nil {
 			return fmt.Errorf("failed to write expiry: %v", err)
 		}
+	}
+
+	// fallback address (f)
+	if pr.FallbackAddress != "" {
+		// TODO: implement fallback address
+		return fmt.Errorf("fallback address is not supported yet")
 	}
 
 	// feature bits (9)
