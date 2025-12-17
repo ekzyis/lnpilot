@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ekzyis/lntutor/lib/bech32"
+	"github.com/ekzyis/lntutor/lib/bitcoin"
 	"github.com/ekzyis/lntutor/lib/secp256k1"
 	"github.com/ekzyis/lntutor/lightning/bolt09"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
@@ -305,7 +306,14 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 	// fallback address (f)
 	if pr.FallbackAddress != "" {
 		// TODO: implement fallback address
-		return fmt.Errorf("fallback address is not supported yet")
+		addr, err := bitcoin.DecodeAddress(pr.FallbackAddress)
+		if err != nil {
+			return fmt.Errorf("failed to decode fallback address: %v", err)
+		}
+		err = writeTaggedField(buf, fieldTypeF, addr)
+		if err != nil {
+			return fmt.Errorf("failed to write fallback address: %v", err)
+		}
 	}
 
 	// feature bits (9)

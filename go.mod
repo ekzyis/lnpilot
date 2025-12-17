@@ -9,6 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 )
 
 require (
