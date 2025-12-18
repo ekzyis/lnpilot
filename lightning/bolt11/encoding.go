@@ -3,8 +3,12 @@ package bolt11
 import "github.com/ekzyis/lntutor/lib/bech32"
 
 type Bolt11Encoder interface {
+	EncodeBase32() ([]byte, error)
 	EncodeBolt11() ([]byte, error)
 }
+
+// Every Bolt11Encoder must also implement bech32.Base32Encoder
+var _ bech32.Base32Encoder = (Bolt11Encoder)(nil)
 
 type StringBolt11Encoder struct {
 	*bech32.BytesBase32Encoder
