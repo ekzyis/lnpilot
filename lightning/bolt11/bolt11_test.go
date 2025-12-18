@@ -171,7 +171,7 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 	// 029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
 	// then 039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
 
-	t.Skip("tagged fields f and r not supported yet")
+	t.Skip("tagged field r not supported yet")
 
 	assert := assert.New(t)
 
