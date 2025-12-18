@@ -123,3 +123,7 @@ func (fv FeatureVector) EncodeBase32() ([]byte, error) {
 	}
 	return b, nil
 }
+
+func (fv FeatureVector) EncodeBolt11() ([]byte, error) {
+	return fv.EncodeBase32()
+}

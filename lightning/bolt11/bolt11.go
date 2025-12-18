@@ -82,6 +82,18 @@ const (
 	MaxDescriptionBytes = 639
 )
 
+type Bolt11Encoder interface {
+	EncodeBolt11() ([]byte, error)
+}
+
+type Bolt11StringEncoder struct {
+	*bech32.Base32BytesEncoder
+}
+
+type Bolt11UintEncoder struct {
+	*bech32.Base32UintEncoder
+}
+
 func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentRequest {
 	var paymentSecret lntypes.Hash
 	// rand.Read never returns an error, and always fills the buffer entirely
@@ -282,7 +294,7 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 
 	// description (d) or description hash (h)
 	if pr.Description != "" {
-		err = writeTaggedField(buf, fieldTypeD, bech32.NewBase32StringEncoder(pr.Description))
+		err = writeTaggedField(buf, fieldTypeD, NewBolt11StringEncoder(pr.Description))
 		if err != nil {
 			return fmt.Errorf("failed to write description: %v", err)
 		}
@@ -297,7 +309,7 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 
 	// expiry (x)
 	if pr.Expiry != 0 {
-		err = writeTaggedField(buf, fieldTypeX, bech32.NewBase32UintEncoder(uint(pr.Expiry.Seconds())))
+		err = writeTaggedField(buf, fieldTypeX, NewBolt11UintEncoder(uint(pr.Expiry.Seconds())))
 		if err != nil {
 			return fmt.Errorf("failed to write expiry: %v", err)
 		}
@@ -327,21 +339,21 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 	return nil
 }
 
-func writeTaggedField(buf *bytes.Buffer, fieldType byte, data bech32.Base32Encoder) error {
+func writeTaggedField(buf *bytes.Buffer, fieldType byte, data Bolt11Encoder) error {
 	buf.WriteByte(fieldType)
 
-	dataBase32, err := data.EncodeBase32()
+	dataBolt11, err := data.EncodeBolt11()
 	if err != nil {
 		return err
 	}
 
 	tf := func() *TagField {
-		tf := &TagField{FieldType: fieldType, Data: dataBase32}
+		tf := &TagField{FieldType: fieldType, Data: dataBolt11}
 		switch fieldType {
 		case fieldTypeP, fieldTypeS, fieldTypeH:
 			tf.DataLength = 52
 		default:
-			tf.DataLength = uint16(len(dataBase32))
+			tf.DataLength = uint16(len(dataBolt11))
 		}
 		return tf
 	}()
@@ -388,4 +400,22 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	buf.Write(sigBase32)
 
 	return nil
+}
+
+func (e Bolt11StringEncoder) EncodeBolt11() ([]byte, error) {
+	return e.EncodeBase32()
+}
+
+func (e Bolt11UintEncoder) EncodeBolt11() ([]byte, error) {
+	return e.EncodeBase32()
+}
+
+func NewBolt11StringEncoder(data string) Bolt11Encoder {
+	encoder := bech32.NewBase32StringEncoder(data)
+	return Bolt11StringEncoder{Base32BytesEncoder: &encoder}
+}
+
+func NewBolt11UintEncoder(num uint) Bolt11Encoder {
+	encoder := bech32.NewBase32UintEncoder(num)
+	return Bolt11UintEncoder{Base32UintEncoder: &encoder}
 }

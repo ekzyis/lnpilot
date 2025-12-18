@@ -16,6 +16,10 @@ func (h Hash) IsZero() bool {
 	return h == [32]byte{}
 }
 
+func (h Hash) EncodeBolt11() ([]byte, error) {
+	return h.EncodeBase32()
+}
+
 type Preimage [32]byte
 
 func (p Preimage) Hash() Hash {

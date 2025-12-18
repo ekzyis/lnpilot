@@ -21,10 +21,9 @@ type Address interface {
 	// (bech32 for segwit, base58 for legacy).
 	Encode() (string, error)
 
-	// EncodeBase32 encodes the address into a base32-encoded byte array,
-	// suitable for writing as the data of a tagged field in a
-	// bolt11 payment request.
-	EncodeBase32() ([]byte, error)
+	// EncodeBolt11 encodes the address into a base32-encoded byte array,
+	// and includes the version byte for the address type.
+	EncodeBolt11() ([]byte, error)
 }
 
 type SegwitAddress struct {
@@ -50,7 +49,7 @@ func (a *SegwitAddress) Encode() (string, error) {
 	return "", ErrNotImplemented
 }
 
-func (a *SegwitAddress) EncodeBase32() ([]byte, error) {
+func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
 	// TODO: implement
 	return nil, ErrNotImplemented
 }
@@ -60,7 +59,7 @@ func (a *P2PKAddress) Encode() (string, error) {
 	return "", ErrNotImplemented
 }
 
-func (a *P2PKAddress) EncodeBase32() ([]byte, error) {
+func (a *P2PKAddress) EncodeBolt11() ([]byte, error) {
 	// TODO: implement
 	return nil, ErrNotImplemented
 }
@@ -70,7 +69,7 @@ func (a *P2PKHAddress) Encode() (string, error) {
 	return "", ErrNotImplemented
 }
 
-func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
+func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
 	base32Bytes, err := bech32.ConvertBits(a.PubKeyHash, 8, 5, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert pubkey hash to base32: %w", err)
@@ -86,7 +85,7 @@ func (a *P2SHAddress) Encode() (string, error) {
 	return "", ErrNotImplemented
 }
 
-func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
+func (a *P2SHAddress) EncodeBolt11() ([]byte, error) {
 	// TODO: implement
 	return nil, ErrNotImplemented
 }
