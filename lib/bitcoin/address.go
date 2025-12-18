@@ -54,17 +54,12 @@ func (a *SegwitAddress) EncodeBase32() ([]byte, error) {
 	return nil, ErrNotImplemented
 }
 
-func (a *P2PKAddress) EncodeBase32() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
-}
-
 func (a *P2PKAddress) Encode() (string, error) {
 	// TODO: implement
 	return "", ErrNotImplemented
 }
 
-func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
+func (a *P2PKAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
 	return nil, ErrNotImplemented
 }
@@ -74,7 +69,7 @@ func (a *P2PKHAddress) Encode() (string, error) {
 	return "", ErrNotImplemented
 }
 
-func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
+func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
 	return nil, ErrNotImplemented
 }
@@ -82,6 +77,11 @@ func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
 func (a *P2SHAddress) Encode() (string, error) {
 	// TODO: implement
 	return "", ErrNotImplemented
+}
+
+func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
+	// TODO: implement
+	return nil, ErrNotImplemented
 }
 
 // DecodeAddress decodes a base58 (legacy) or bech32 (segwit) address.
