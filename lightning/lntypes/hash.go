@@ -3,13 +3,13 @@ package lntypes
 import (
 	"crypto/sha256"
 
-	"github.com/btcsuite/btcd/btcutil/bech32"
+	"github.com/ekzyis/lntutor/lib/bech32"
 )
 
 type Hash [32]byte
 
 func (h Hash) EncodeBase32() ([]byte, error) {
-	return bech32.ConvertBits(h[:], 8, 5, true)
+	return bech32.NewBytesBase32Encoder(h[:]).EncodeBase32()
 }
 
 func (h Hash) IsZero() bool {

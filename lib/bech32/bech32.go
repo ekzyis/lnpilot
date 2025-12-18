@@ -24,8 +24,8 @@ type VarUintBase32Encoder struct {
 	num uint
 }
 
-func (e BytesBase32Encoder) EncodeBase32() ([]byte, error) {
-	return bech32.ConvertBits(e.data, 8, 5, true)
+func NewBytesBase32Encoder(data []byte) BytesBase32Encoder {
+	return BytesBase32Encoder{data: data}
 }
 
 func NewStringBase32Encoder(data string) BytesBase32Encoder {
@@ -38,6 +38,10 @@ func NewVarUintBase32Encoder(num uint) VarUintBase32Encoder {
 
 func NewUintBase32Encoder(num, bitLen uint) UintBase32Encoder {
 	return UintBase32Encoder{num: num, bitLen: bitLen}
+}
+
+func (e BytesBase32Encoder) EncodeBase32() ([]byte, error) {
+	return bech32.ConvertBits(e.data, 8, 5, true)
 }
 
 // EncodeBase32 converts the uint value to a base32-encoded byte array in
