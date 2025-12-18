@@ -13,6 +13,7 @@ import (
 )
 
 var ErrInvalidLegacyAddress = errors.New("failed to decode as legacy address")
+var ErrNotImplemented = errors.New("not implemented")
 
 type Address interface {
 	// Encode encodes the address into the appropriate format
@@ -45,42 +46,42 @@ type P2SHAddress struct {
 
 func (a *SegwitAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", nil
+	return "", ErrNotImplemented
 }
 
 func (a *SegwitAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (a *P2PKAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (a *P2PKAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", nil
+	return "", ErrNotImplemented
 }
 
 func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (a *P2PKHAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", nil
+	return "", ErrNotImplemented
 }
 
 func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
-	return nil, nil
+	return nil, ErrNotImplemented
 }
 
 func (a *P2SHAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", nil
+	return "", ErrNotImplemented
 }
 
 // DecodeAddress decodes a base58 (legacy) or bech32 (segwit) address.
