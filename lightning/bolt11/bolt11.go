@@ -317,7 +317,6 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 
 	// fallback address (f)
 	if pr.FallbackAddress != "" {
-		// TODO: implement fallback address
 		addr, err := bitcoin.DecodeAddress(pr.FallbackAddress)
 		if err != nil {
 			return fmt.Errorf("failed to decode fallback address: %v", err)
