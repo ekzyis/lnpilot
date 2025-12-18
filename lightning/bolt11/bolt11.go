@@ -93,16 +93,16 @@ type Bolt11Encoder interface {
 	EncodeBolt11() ([]byte, error)
 }
 
-type Bolt11StringEncoder struct {
-	*bech32.Base32BytesEncoder
+type StringBolt11Encoder struct {
+	*bech32.BytesBase32Encoder
 }
 
-type Bolt11VarUintEncoder struct {
-	*bech32.Base32VarUintEncoder
+type VarUintBolt11Encoder struct {
+	*bech32.VarUintBase32Encoder
 }
 
-type Bolt11UintEncoder struct {
-	*bech32.Base32UintEncoder
+type UintBolt11Encoder struct {
+	*bech32.UintBase32Encoder
 }
 
 func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentRequest {
@@ -236,7 +236,7 @@ func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) 
 	//
 	// see https://github.com/lightning/bolts/blob/master/11-payment-encoding.md
 
-	timestampBase32, err := NewBolt11UintEncoder(uint(pr.Timestamp.Unix()), 35).EncodeBolt11()
+	timestampBase32, err := NewUintBolt11Encoder(uint(pr.Timestamp.Unix()), 35).EncodeBolt11()
 	if err != nil {
 		return "", fmt.Errorf("failed to encode timestamp: %v", err)
 	}
@@ -351,7 +351,7 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 		return nil, ErrFieldDataNotFound
 	case fieldTypeD:
 		if pr.Description != "" {
-			return NewBolt11StringEncoder(pr.Description), nil
+			return NewStringBolt11Encoder(pr.Description), nil
 		}
 		return nil, ErrFieldDataNotFound
 	case fieldTypeH:
@@ -361,7 +361,7 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 		return nil, ErrFieldDataNotFound
 	case fieldTypeX:
 		if pr.Expiry != 0 {
-			return NewBolt11VarUintEncoder(uint(pr.Expiry.Seconds())), nil
+			return NewVarUintBolt11Encoder(uint(pr.Expiry.Seconds())), nil
 		}
 		return nil, ErrFieldDataNotFound
 	case fieldTypeF:
@@ -402,7 +402,7 @@ func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11E
 		return fmt.Errorf("data length does not match: expected %d, got %d", tf.DataLength, len(tf.Data))
 	}
 
-	dataLengthBase32, err := bech32.NewBase32UintEncoder(uint(tf.DataLength), 10).EncodeBase32()
+	dataLengthBase32, err := bech32.NewUintBase32Encoder(uint(tf.DataLength), 10).EncodeBase32()
 	if err != nil {
 		return fmt.Errorf("failed to encode data length: %v", err)
 	}
@@ -444,29 +444,29 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	return nil
 }
 
-func (e Bolt11StringEncoder) EncodeBolt11() ([]byte, error) {
+func (e StringBolt11Encoder) EncodeBolt11() ([]byte, error) {
 	return e.EncodeBase32()
 }
 
-func (e Bolt11VarUintEncoder) EncodeBolt11() ([]byte, error) {
+func (e VarUintBolt11Encoder) EncodeBolt11() ([]byte, error) {
 	return e.EncodeBase32()
 }
 
-func (e Bolt11UintEncoder) EncodeBolt11() ([]byte, error) {
+func (e UintBolt11Encoder) EncodeBolt11() ([]byte, error) {
 	return e.EncodeBase32()
 }
 
-func NewBolt11StringEncoder(data string) Bolt11Encoder {
-	encoder := bech32.NewBase32StringEncoder(data)
-	return Bolt11StringEncoder{Base32BytesEncoder: &encoder}
+func NewStringBolt11Encoder(data string) Bolt11Encoder {
+	encoder := bech32.NewStringBase32Encoder(data)
+	return StringBolt11Encoder{BytesBase32Encoder: &encoder}
 }
 
-func NewBolt11UintEncoder(num, bitLen uint) Bolt11Encoder {
-	encoder := bech32.NewBase32UintEncoder(num, bitLen)
-	return Bolt11UintEncoder{Base32UintEncoder: &encoder}
+func NewUintBolt11Encoder(num, bitLen uint) Bolt11Encoder {
+	encoder := bech32.NewUintBase32Encoder(num, bitLen)
+	return UintBolt11Encoder{UintBase32Encoder: &encoder}
 }
 
-func NewBolt11VarUintEncoder(num uint) Bolt11Encoder {
-	encoder := bech32.NewBase32VarUintEncoder(num)
-	return Bolt11VarUintEncoder{Base32VarUintEncoder: &encoder}
+func NewVarUintBolt11Encoder(num uint) Bolt11Encoder {
+	encoder := bech32.NewVarUintBase32Encoder(num)
+	return VarUintBolt11Encoder{VarUintBase32Encoder: &encoder}
 }

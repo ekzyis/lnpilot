@@ -11,38 +11,38 @@ type Base32Encoder interface {
 	EncodeBase32() ([]byte, error)
 }
 
-type Base32BytesEncoder struct {
+type BytesBase32Encoder struct {
 	data []byte
 }
 
-type Base32UintEncoder struct {
+type UintBase32Encoder struct {
 	num    uint
 	bitLen uint
 }
 
-type Base32VarUintEncoder struct {
+type VarUintBase32Encoder struct {
 	num uint
 }
 
-func (e Base32BytesEncoder) EncodeBase32() ([]byte, error) {
+func (e BytesBase32Encoder) EncodeBase32() ([]byte, error) {
 	return bech32.ConvertBits(e.data, 8, 5, true)
 }
 
-func NewBase32StringEncoder(data string) Base32BytesEncoder {
-	return Base32BytesEncoder{data: []byte(data)}
+func NewStringBase32Encoder(data string) BytesBase32Encoder {
+	return BytesBase32Encoder{data: []byte(data)}
 }
 
-func NewBase32VarUintEncoder(num uint) Base32VarUintEncoder {
-	return Base32VarUintEncoder{num: num}
+func NewVarUintBase32Encoder(num uint) VarUintBase32Encoder {
+	return VarUintBase32Encoder{num: num}
 }
 
-func NewBase32UintEncoder(num, bitLen uint) Base32UintEncoder {
-	return Base32UintEncoder{num: num, bitLen: bitLen}
+func NewUintBase32Encoder(num, bitLen uint) UintBase32Encoder {
+	return UintBase32Encoder{num: num, bitLen: bitLen}
 }
 
 // EncodeBase32 converts the uint value to a base32-encoded byte array in
 // big-endian order. It includes zero padding to match the bit length.
-func (e Base32UintEncoder) EncodeBase32() ([]byte, error) {
+func (e UintBase32Encoder) EncodeBase32() ([]byte, error) {
 	num := e.num
 	bitLen := e.bitLen
 	base32Len := bitLen / 5
@@ -72,7 +72,7 @@ func (e Base32UintEncoder) EncodeBase32() ([]byte, error) {
 
 // EncodeBase32 converts the uint value to a variable-length base32-encoded byte
 // array in big-endian order.
-func (e Base32VarUintEncoder) EncodeBase32() ([]byte, error) {
+func (e VarUintBase32Encoder) EncodeBase32() ([]byte, error) {
 	num := e.num
 	var numBase32 []byte
 	for num > 0 {
