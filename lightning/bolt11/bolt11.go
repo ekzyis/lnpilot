@@ -170,8 +170,7 @@ func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 		for i, bit := range featureBits {
 			bolt09Bits[i] = bolt09.FeatureBit(bit)
 		}
-		fv := bolt09.NewFeatureVector(bolt09Bits...)
-		pr.Features = *fv
+		pr.Features = *bolt09.NewFeatureVector(bolt09Bits...)
 	}
 }
 
