@@ -8,6 +8,7 @@ import (
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ekzyis/lntutor/lib/base58"
+	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 	"golang.org/x/crypto/ripemd160"
 )
@@ -70,8 +71,14 @@ func (a *P2PKHAddress) Encode() (string, error) {
 }
 
 func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
+	base32Bytes, err := bech32.ConvertBits(a.PubKeyHash, 8, 5, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert pubkey hash to base32: %w", err)
+	}
+	// 0x11 is the version byte for P2PKH addresses in bolt11 (17 in base10)
+	// NOTE: this is now a specific encoding for bolt11 tagged fields, and not
+	// just the base32 encoding of the address. Rename interface?
+	return append([]byte{0x11}, base32Bytes...), nil
 }
 
 func (a *P2SHAddress) Encode() (string, error) {

@@ -142,7 +142,6 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 	// The same, on testnet, with a fallback address mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP
 
-	t.Skip("tagged field f not supported yet")
 	t.Skip("different order of tagged fields not supported yet")
 
 	assert := assert.New(t)
