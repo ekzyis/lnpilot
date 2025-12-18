@@ -56,26 +56,28 @@ const (
 )
 
 type TaggedField struct {
-	FieldType  byte   // must be encoded as 5 bits
-	DataLength uint16 // must be encoded as 10 bits, big-endian (maximum is 1023)
-	Data       []byte // must be encoded as 5 x data_length bits (maximum is 640 bytes)
+	FieldType  TaggedFieldType // must be encoded as 5 bits
+	DataLength uint16          // must be encoded as 10 bits, big-endian (maximum is 1023)
+	Data       []byte          // must be encoded as 5 x data_length bits (maximum is 640 bytes)
 }
+
+type TaggedFieldType = byte
 
 const (
 	// fieldTypeP is the field containing the payment hash.
-	fieldTypeP byte = 1
+	fieldTypeP TaggedFieldType = 1
 	// fieldTypeS is the field containing the payment secret.
-	fieldTypeS byte = 16
+	fieldTypeS TaggedFieldType = 16
 	// fieldTypeD is the field containing the description.
-	fieldTypeD byte = 13
+	fieldTypeD TaggedFieldType = 13
 	// fieldTypeH is the field containing the description hash.
-	fieldTypeH byte = 23
+	fieldTypeH TaggedFieldType = 23
 	// fieldTypeX is the field containing the expiry.
-	fieldTypeX byte = 6
+	fieldTypeX TaggedFieldType = 6
 	// fieldType9 is the field containing the feature bits.
-	fieldType9 byte = 5
+	fieldType9 TaggedFieldType = 5
 	// fieldTypeF is the field containing the fallback address.
-	fieldTypeF byte = 9
+	fieldTypeF TaggedFieldType = 9
 
 	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
 	// or 640 bytes of data in a single field.
@@ -337,7 +339,7 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 	return nil
 }
 
-func writeTaggedField(buf *bytes.Buffer, fieldType byte, data Bolt11Encoder) error {
+func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11Encoder) error {
 	buf.WriteByte(fieldType)
 
 	dataBolt11, err := data.EncodeBolt11()
