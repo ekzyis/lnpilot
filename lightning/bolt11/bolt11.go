@@ -55,7 +55,7 @@ const (
 	PaymentMetadataOptional FeatureBit = FeatureBit(bolt09.PaymentMetadataOptional)
 )
 
-type TagField struct {
+type TaggedField struct {
 	FieldType  byte   // must be encoded as 5 bits
 	DataLength uint16 // must be encoded as 10 bits, big-endian (maximum is 1023)
 	Data       []byte // must be encoded as 5 x data_length bits (maximum is 640 bytes)
@@ -345,8 +345,8 @@ func writeTaggedField(buf *bytes.Buffer, fieldType byte, data Bolt11Encoder) err
 		return err
 	}
 
-	tf := func() *TagField {
-		tf := &TagField{FieldType: fieldType, Data: dataBolt11}
+	tf := func() *TaggedField {
+		tf := &TaggedField{FieldType: fieldType, Data: dataBolt11}
 		switch fieldType {
 		case fieldTypeP, fieldTypeS, fieldTypeH:
 			tf.DataLength = 52
