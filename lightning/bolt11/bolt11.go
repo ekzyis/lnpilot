@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
+	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/ekzyis/lntutor/lib/bech32"
@@ -30,6 +32,9 @@ type PaymentRequest struct {
 	DescriptionHash lntypes.Hash
 	Features        bolt09.FeatureVector
 	FallbackAddress string
+
+	// taggedFields keeps track of the order the tagged fields were specified in
+	taggedFields []TaggedFieldType
 }
 
 // bolt09 feature bits that can be set in a bolt11 payment request.
@@ -114,16 +119,30 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 		option(pr)
 	}
 
+	// TODO: if default values are set above and not handled here (expiry,
+	// payment secret), the tagged field won't be included in pr.taggedFields.
+	// This is a bug: the field will be missing from the encoded payment
+	// request.
+	//
+	// To fix this, we should run all provided options first, and then set
+	// default values, and update pr.taggedFields accordingly.
+
 	if pr.PaymentHash.IsZero() {
 		var preimage lntypes.Preimage
 		rand.Read(preimage[:])
 		pr.PaymentHash = preimage.Hash()
+		if i := slices.Index(pr.taggedFields, fieldTypeP); i == -1 {
+			pr.taggedFields = append(pr.taggedFields, fieldTypeP)
+		}
 	}
 
 	if len([]byte(pr.Description)) > MaxDescriptionBytes {
 		// description too long, use hash instead
 		pr.DescriptionHash = sha256.Sum256([]byte(pr.Description))
 		pr.Description = ""
+		if i := slices.Index(pr.taggedFields, fieldTypeD); i != -1 {
+			pr.taggedFields[i] = fieldTypeH
+		}
 	}
 
 	return pr
@@ -144,24 +163,28 @@ func WithTimestamp(timestamp time.Time) func(*PaymentRequest) {
 func WithPaymentHash(paymentHash [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.PaymentHash = lntypes.Hash(paymentHash)
+		pr.taggedFields = append(pr.taggedFields, fieldTypeP)
 	}
 }
 
 func WithPaymentSecret(paymentSecret [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.PaymentSecret = lntypes.Hash(paymentSecret)
+		pr.taggedFields = append(pr.taggedFields, fieldTypeS)
 	}
 }
 
 func WithDescription(description string) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.Description = description
+		pr.taggedFields = append(pr.taggedFields, fieldTypeD)
 	}
 }
 
 func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.DescriptionHash = lntypes.Hash(descriptionHash)
+		pr.taggedFields = append(pr.taggedFields, fieldTypeH)
 	}
 }
 
@@ -173,18 +196,21 @@ func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 			bolt09Bits[i] = bolt09.FeatureBit(bit)
 		}
 		pr.Features = *bolt09.NewFeatureVector(bolt09Bits...)
+		pr.taggedFields = append(pr.taggedFields, fieldType9)
 	}
 }
 
 func WithExpiry(expiry time.Duration) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.Expiry = expiry
+		pr.taggedFields = append(pr.taggedFields, fieldTypeX)
 	}
 }
 
 func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.FallbackAddress = fallbackAddress
+		pr.taggedFields = append(pr.taggedFields, fieldTypeF)
 	}
 }
 
@@ -281,62 +307,68 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 }
 
 func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
-	// payment secret (s)
-	err := writeTaggedField(buf, fieldTypeS, pr.PaymentSecret)
-	if err != nil {
-		return fmt.Errorf("failed to write payment secret: %v", err)
-	}
-
-	// payment hash (p)
-	err = writeTaggedField(buf, fieldTypeP, pr.PaymentHash)
-	if err != nil {
-		return fmt.Errorf("failed to write payment hash: %v", err)
-	}
-
-	// description (d) or description hash (h)
-	if pr.Description != "" {
-		err = writeTaggedField(buf, fieldTypeD, NewBolt11StringEncoder(pr.Description))
-		if err != nil {
-			return fmt.Errorf("failed to write description: %v", err)
+	for _, fieldType := range pr.taggedFields {
+		data, err := getTaggedFieldData(pr, fieldType)
+		if err == ErrFieldDataNotFound {
+			continue
 		}
-	} else if !pr.DescriptionHash.IsZero() {
-		err = writeTaggedField(buf, fieldTypeH, pr.DescriptionHash)
 		if err != nil {
-			return fmt.Errorf("failed to write description hash: %v", err)
+			return fmt.Errorf("failed to get tagged field data: %x: %v", fieldType, err)
 		}
-	} else {
-		return fmt.Errorf("one of description or description hash must be present")
-	}
-
-	// expiry (x)
-	if pr.Expiry != 0 {
-		err = writeTaggedField(buf, fieldTypeX, NewBolt11UintEncoder(uint(pr.Expiry.Seconds())))
+		err = writeTaggedField(buf, fieldType, data)
 		if err != nil {
-			return fmt.Errorf("failed to write expiry: %v", err)
+			return fmt.Errorf("failed to write tagged field: %x: %v", fieldType, err)
 		}
-	}
-
-	// fallback address (f)
-	if pr.FallbackAddress != "" {
-		addr, err := bitcoin.DecodeAddress(pr.FallbackAddress)
-		if err != nil {
-			return fmt.Errorf("failed to decode fallback address: %v", err)
-		}
-		err = writeTaggedField(buf, fieldTypeF, addr)
-		if err != nil {
-			return fmt.Errorf("failed to write fallback address: %v", err)
-		}
-	}
-
-	// feature bits (9)
-	err = writeTaggedField(buf, fieldType9, pr.Features)
-	if err != nil {
-		return fmt.Errorf("failed to write feature bits: %v", err)
 	}
 
 	// TODO: write remaining tagged fields
 
 	return nil
+}
+
+var ErrFieldDataNotFound = errors.New("field data not found")
+var ErrUnknownFieldType = errors.New("unknown field type")
+
+func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11Encoder, error) {
+	switch fieldType {
+	case fieldTypeS:
+		if !pr.PaymentSecret.IsZero() {
+			return pr.PaymentSecret, nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldTypeP:
+		if !pr.PaymentHash.IsZero() {
+			return pr.PaymentHash, nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldTypeD:
+		if pr.Description != "" {
+			return NewBolt11StringEncoder(pr.Description), nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldTypeH:
+		if !pr.DescriptionHash.IsZero() {
+			return pr.DescriptionHash, nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldTypeX:
+		if pr.Expiry != 0 {
+			return NewBolt11UintEncoder(uint(pr.Expiry.Seconds())), nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldTypeF:
+		if pr.FallbackAddress != "" {
+			addr, err := bitcoin.DecodeAddress(pr.FallbackAddress)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode fallback address: %v", err)
+			}
+			return addr, nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldType9:
+		return pr.Features, nil
+	}
+	return nil, ErrUnknownFieldType
 }
 
 func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11Encoder) error {

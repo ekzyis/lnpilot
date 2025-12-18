@@ -142,16 +142,14 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 	// The same, on testnet, with a fallback address mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP
 
-	t.Skip("different order of tagged fields not supported yet")
-
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
 		2_000_000_000,
 		WithNetwork(lntypes.NetworkTestnet),
 		WithTimestamp(timestamp),
-		WithDescriptionHash(longDescriptionHash),
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
+		WithDescriptionHash(longDescriptionHash),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithFallbackAddress("mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP"), // P2PKH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
@@ -202,8 +200,7 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 	// On mainnet, with fallback (P2SH) address
 	// 3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX
 
-	t.Skip("tagged field f not supported yet")
-	t.Skip("different order of tagged fields not supported yet")
+	t.Skip("tagged field f (P2SH) not supported yet")
 
 	assert := assert.New(t)
 
@@ -231,8 +228,7 @@ func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
 	// On mainnet, with fallback (P2WPKH) address
 	// bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
 
-	t.Skip("tagged field f not supported yet")
-	t.Skip("different order of tagged fields not supported yet")
+	t.Skip("tagged field f (P2WPKH) not supported yet")
 
 	assert := assert.New(t)
 
@@ -260,8 +256,7 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 	// On mainnet, with fallback (P2WSH) address
 	// bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3
 
-	t.Skip("tagged field f not supported yet")
-	t.Skip("different order of tagged fields not supported yet")
+	t.Skip("tagged field f (P2WSH) not supported yet")
 
 	assert := assert.New(t)
 
@@ -289,7 +284,7 @@ func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 	// On mainnet, with fallback (P2TR) address
 	// bc1pptdvg0d2nj99568qn6ssdy4cygnwuxgw2ukmnwgwz7jpqjz2kszse2s3lm
 
-	t.Skip("tagged field f not supported yet")
+	t.Skip("tagged field f (P2TR) not supported yet")
 
 	assert := assert.New(t)
 
