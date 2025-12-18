@@ -3,11 +3,14 @@ package bolt11
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
+	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lib/secp256k1"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 	"github.com/stretchr/testify/assert"
@@ -41,6 +44,124 @@ func (s *TestSigner) CompactECDSASign(msg []byte) (secp256k1.CompactECDSASignatu
 		R:          [32]byte(sig[1:33]),
 		S:          [32]byte(sig[33:65]),
 	}, nil
+}
+
+func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
+	assert := assert.New(t)
+
+	before := time.Now()
+	pr := NewPaymentRequest(1_000)
+	after := time.Now()
+
+	// check hrp
+	assert.Equalf(lntypes.NetworkMainnet, pr.Network, "network should be mainnet")
+	assert.Equalf(lntypes.MilliSatoshi(1_000), pr.Msats, "amount should be 1 sat")
+	hrp, err := pr.humanReadablePart()
+	if !assert.NoError(err) {
+		return
+	}
+	assert.Equalf("lnbc10n", hrp, "hrp should be lnbc10n")
+
+	// check timestamp
+	assert.Falsef(pr.Timestamp.IsZero(), "timestamp should be set")
+	assert.Truef(before.Before(pr.Timestamp) && after.After(pr.Timestamp), "timestamp should be set to now")
+
+	// check other properties
+	assert.Equalf(3600*time.Second, pr.Expiry, "expiry should be 1 hour")
+	assert.Falsef(pr.PaymentHash.IsZero(), "payment hash should be set")
+	assert.Falsef(pr.PaymentSecret.IsZero(), "payment secret should be set")
+	assert.Truef(pr.Description == "", "description should be empty")
+	assert.Truef(pr.DescriptionHash.IsZero(), "description hash should be zero")
+	assert.Truef(pr.FallbackAddress == "", "fallback address should be empty")
+
+	// encode pr as bech32
+	encoded, err := pr.EncodeBech32(&TestSigner{})
+	if !assert.NoError(err) {
+		return
+	}
+
+	// check hrp in bech32 encoded pr
+	assert.Truef(strings.HasPrefix(encoded, hrp), "hrp bech32 mismatch")
+	encoded = strings.TrimPrefix(encoded, hrp)
+
+	// check bech32 separator '1'
+	assert.Truef(strings.HasPrefix(encoded, "1"), "bech32 separator '1' missing")
+	encoded = strings.TrimPrefix(encoded, "1")
+
+	// check timestamp in bech32 encoded pr
+	timestampBase32, _ := NewUintBolt11Encoder(uint(pr.Timestamp.Unix()), 35).EncodeBolt11()
+	timestampBech32 := bech32.BytesToBech32Charset(timestampBase32)
+	assert.Truef(strings.HasPrefix(encoded, timestampBech32), "timestamp bech32 mismatch")
+	encoded = strings.TrimPrefix(encoded, timestampBech32)
+
+	// check tagged fields + signature + checksum
+
+	toBech32 := func(fieldType TaggedFieldType, data Bolt11Encoder) string {
+		dataBase32, _ := data.EncodeBolt11()
+		dataBase32Length, _ := NewUintBolt11Encoder(uint(len(dataBase32)), 10).EncodeBolt11()
+		return fmt.Sprintf("%s%s%s",
+			bech32.BytesToBech32Charset([]byte{fieldType}),
+			bech32.BytesToBech32Charset(dataBase32Length),
+			bech32.BytesToBech32Charset(dataBase32),
+		)
+	}
+
+	tfMatchers := []func(*string) bool{
+		func(encoded *string) bool {
+			if (*encoded)[0] != 'p' {
+				return false
+			}
+			paymentHashBech32 := toBech32(fieldTypeP, pr.PaymentHash)
+			assert.Truef(strings.HasPrefix(*encoded, paymentHashBech32), "payment hash bech32 mismatch")
+			*encoded = strings.TrimPrefix(*encoded, paymentHashBech32)
+			return true
+		},
+		func(encoded *string) bool {
+			if (*encoded)[0] != 's' {
+				return false
+			}
+			paymentSecretBech32 := toBech32(fieldTypeS, pr.PaymentSecret)
+			assert.Truef(strings.HasPrefix(*encoded, paymentSecretBech32), "payment secret bech32 mismatch")
+			*encoded = strings.TrimPrefix(*encoded, paymentSecretBech32)
+			return true
+		},
+		func(encoded *string) bool {
+			if (*encoded)[0] != 'x' {
+				return false
+			}
+			expiryBech32 := toBech32(fieldTypeX, NewVarUintBolt11Encoder(uint(pr.Expiry.Seconds())))
+			assert.Truef(strings.HasPrefix(*encoded, expiryBech32), "expiry bech32 mismatch")
+			*encoded = strings.TrimPrefix(*encoded, expiryBech32)
+			return true
+		},
+		func(encoded *string) bool {
+			// signature is 64 bytes + 1 byte recovery id in base256
+			// => 104 bytes in base32
+			sigLength := (64 + 1) * 8 / 5
+			checkSumLength := 6
+			if len(*encoded) == sigLength+checkSumLength {
+				*encoded = ""
+				return true
+			}
+			return false
+		},
+	}
+
+	for encoded != "" {
+		match := false
+		for i, matcher := range tfMatchers {
+			if match = matcher(&encoded); match {
+				// don't use matcher again
+				tfMatchers = append(tfMatchers[:i], tfMatchers[i+1:]...)
+				break
+			}
+		}
+		if !match {
+			assert.FailNow("unknown data in encoded payment request")
+		}
+	}
+
+	assert.True(len(tfMatchers) == 0, "missing tagged fields in encoded payment request")
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {

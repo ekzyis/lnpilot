@@ -95,3 +95,14 @@ func Encode(hrp string, data []byte) (string, error) {
 func ConvertBits(data []byte, fromBits, toBits uint8, pad bool) ([]byte, error) {
 	return bech32.ConvertBits(data, fromBits, toBits, pad)
 }
+
+// BytesToBech32 converts a byte array to a bech32 string without the checksum
+// by mapping each byte to the corresponding character in the bech32 charset.
+func BytesToBech32Charset(data []byte) string {
+	charset := "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+	var s string
+	for _, b := range data {
+		s += string(charset[b])
+	}
+	return s
+}

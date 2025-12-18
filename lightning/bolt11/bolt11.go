@@ -34,6 +34,8 @@ type PaymentRequest struct {
 	FallbackAddress string
 
 	// taggedFields keeps track of the order the tagged fields were specified in
+	// so we can include them in the same order in the bech32 encoding of the
+	// payment request.
 	taggedFields []TaggedFieldType
 }
 
@@ -96,41 +98,23 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 	rand.Read(paymentSecret[:])
 
 	pr := &PaymentRequest{
-		Msats:         lntypes.MilliSatoshi(msats),
-		Timestamp:     time.Now(),
-		Expiry:        time.Hour,
-		Network:       lntypes.NetworkMainnet,
-		PaymentSecret: paymentSecret,
+		Network:   lntypes.NetworkMainnet,
+		Msats:     lntypes.MilliSatoshi(msats),
+		Timestamp: time.Now(),
 	}
+
+	// default options
+	options = append(
+		[]func(*PaymentRequest){
+			WithRandomPaymentSecret(),
+			WithRandomPaymentHash(),
+			WithExpiry(time.Hour),
+		},
+		options...,
+	)
 
 	for _, option := range options {
 		option(pr)
-	}
-
-	// TODO: if default values are set above and not handled here (expiry,
-	// payment secret), the tagged field won't be included in pr.taggedFields.
-	// This is a bug: the field will be missing from the encoded payment
-	// request.
-	//
-	// To fix this, we should run all provided options first, and then set
-	// default values, and update pr.taggedFields accordingly.
-
-	if pr.PaymentHash.IsZero() {
-		var preimage lntypes.Preimage
-		rand.Read(preimage[:])
-		pr.PaymentHash = preimage.Hash()
-		if i := slices.Index(pr.taggedFields, fieldTypeP); i == -1 {
-			pr.taggedFields = append(pr.taggedFields, fieldTypeP)
-		}
-	}
-
-	if len([]byte(pr.Description)) > MaxDescriptionBytes {
-		// description too long, use hash instead
-		pr.DescriptionHash = sha256.Sum256([]byte(pr.Description))
-		pr.Description = ""
-		if i := slices.Index(pr.taggedFields, fieldTypeD); i != -1 {
-			pr.taggedFields[i] = fieldTypeH
-		}
 	}
 
 	return pr
@@ -151,28 +135,61 @@ func WithTimestamp(timestamp time.Time) func(*PaymentRequest) {
 func WithPaymentHash(paymentHash [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.PaymentHash = lntypes.Hash(paymentHash)
-		pr.taggedFields = append(pr.taggedFields, fieldTypeP)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeP)
+	}
+}
+
+func WithRandomPaymentHash() func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		var preimage lntypes.Preimage
+		rand.Read(preimage[:])
+		WithPaymentHash(preimage.Hash())(pr)
+		// TODO: how to return preimage to caller?
 	}
 }
 
 func WithPaymentSecret(paymentSecret [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.PaymentSecret = lntypes.Hash(paymentSecret)
-		pr.taggedFields = append(pr.taggedFields, fieldTypeS)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeS)
+	}
+}
+
+func WithRandomPaymentSecret() func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		var paymentSecret lntypes.Hash
+		rand.Read(paymentSecret[:])
+		WithPaymentSecret(paymentSecret)(pr)
 	}
 }
 
 func WithDescription(description string) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
-		pr.Description = description
-		pr.taggedFields = append(pr.taggedFields, fieldTypeD)
+		descBytes := []byte(description)
+		if len(descBytes) <= MaxDescriptionBytes {
+			pr.Description = description
+			pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeD)
+
+			// clear any existing description hash
+			pr.DescriptionHash = lntypes.Hash{}
+			pr.taggedFields = remove(pr.taggedFields, fieldTypeH)
+			return
+		}
+
+		// description too long, use hash instead
+		pr.DescriptionHash = sha256.Sum256(descBytes)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeH)
+
+		// clear any existing description
+		pr.Description = ""
+		pr.taggedFields = remove(pr.taggedFields, fieldTypeD)
 	}
 }
 
 func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.DescriptionHash = lntypes.Hash(descriptionHash)
-		pr.taggedFields = append(pr.taggedFields, fieldTypeH)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeH)
 	}
 }
 
@@ -184,21 +201,21 @@ func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 			bolt09Bits[i] = bolt09.FeatureBit(bit)
 		}
 		pr.Features = *bolt09.NewFeatureVector(bolt09Bits...)
-		pr.taggedFields = append(pr.taggedFields, fieldType9)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldType9)
 	}
 }
 
 func WithExpiry(expiry time.Duration) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.Expiry = expiry
-		pr.taggedFields = append(pr.taggedFields, fieldTypeX)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeX)
 	}
 }
 
 func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.FallbackAddress = fallbackAddress
-		pr.taggedFields = append(pr.taggedFields, fieldTypeF)
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeF)
 	}
 }
 
@@ -426,4 +443,15 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	buf.Write(sigBase32)
 
 	return nil
+}
+
+func appendOrMoveToEnd[S ~[]E, E comparable](slice S, elem E) S {
+	// remove element if it exists
+	slice = slices.DeleteFunc(slice, func(e E) bool { return e == elem })
+	// add element to end
+	return append(slice, elem)
+}
+
+func remove[S ~[]E, E comparable](slice S, elem E) S {
+	return slices.DeleteFunc(slice, func(e E) bool { return e == elem })
 }
