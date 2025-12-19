@@ -376,11 +376,11 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 			continue
 		}
 		if err != nil {
-			return fmt.Errorf("failed to get tagged field data: %x: %w", fieldType, err)
+			return fmt.Errorf("failed to get tagged field data: 0x%02x: %w", fieldType, err)
 		}
 		err = writeTaggedField(buf, fieldType, data)
 		if err != nil {
-			return fmt.Errorf("failed to write tagged field: %x: %w", fieldType, err)
+			return fmt.Errorf("failed to write tagged field: 0x%02x: %w", fieldType, err)
 		}
 	}
 
