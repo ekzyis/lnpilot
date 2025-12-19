@@ -135,6 +135,15 @@ func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
 			return true
 		},
 		func(encoded *string) bool {
+			if (*encoded)[0] != 'c' {
+				return false
+			}
+			minFinalCLTVExpiryDeltaBech32 := toBech32(fieldTypeC, NewVarUintBolt11Encoder(uint(pr.MinFinalCLTVExpiryDelta)))
+			assert.Truef(strings.HasPrefix(*encoded, minFinalCLTVExpiryDeltaBech32), "min_final_cltv_expiry_delta bech32 mismatch")
+			*encoded = strings.TrimPrefix(*encoded, minFinalCLTVExpiryDeltaBech32)
+			return true
+		},
+		func(encoded *string) bool {
 			// signature is 64 bytes + 1 byte recovery id in base256
 			// => 104 bytes in base32
 			sigLength := (64 + 1) * 8 / 5
@@ -179,6 +188,7 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 		WithDescription("Please consider supporting this project"),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -202,6 +212,7 @@ func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
 		WithDescription("1 cup coffee"),
 		WithExpiry(60*time.Second),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -226,6 +237,7 @@ func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
 		WithDescription("ナンセンス 1杯"),
 		WithExpiry(60*time.Second),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -249,6 +261,7 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 		WithDescriptionHash(longDescriptionHash),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -275,6 +288,7 @@ func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 		WithFallbackAddress("mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP"), // P2PKH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -319,6 +333,7 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 		),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -345,6 +360,7 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 		WithFallbackAddress("3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX"), // P2SH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -371,6 +387,7 @@ func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
 		WithFallbackAddress("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"), // P2WPKH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -397,6 +414,7 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 		WithFallbackAddress("bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3"), // P2WSH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -423,6 +441,7 @@ func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 		WithFallbackAddress("bc1pptdvg0d2nj99568qn6ssdy4cygnwuxgw2ukmnwgwz7jpqjz2kszse2s3lm"), // P2TR
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -438,8 +457,6 @@ func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
 	// Please send 0.00967878534 BTC for a list of items
 	// within one week, amount in pico-BTC
 
-	t.Skip("tagged field c not supported yet")
-
 	assert := assert.New(t)
 
 	paymentHashBytes, _ := hex.DecodeString("462264ede7e14047e9b249da94fefc47f41f7d02ee9b091815a5506bc8abf75f")
@@ -447,11 +464,11 @@ func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
 	pr := NewPaymentRequest(
 		967_878_534,
 		WithTimestamp(time.Unix(1572468703, 0)),
-		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("Blockstream Store: 88.85 USD for Blockstream Ledger Nano S x 1, \"Back In My Day\" Sticker x 2, \"I Got Lightning Working\" Sticker x 2 and 1 more items"),
+		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithExpiry(604800*time.Second),
-		// TODO: add min_final_cltv_expiry_delta (c) field from test vector
+		WithMinFinalCLTVExpiryDelta(10),
 		WithRoutingHint(
 			lntypes.NewHopHint(
 				lntypes.MustParseNodePublicKeyFromHex("03d06758583bb5154774a6eb221b1276c9e82d65bbaceca806d90e20c108f4b1c7"),
@@ -488,6 +505,7 @@ func TestPaymentRequest_EncodeBech32_Spec_012(t *testing.T) {
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithFeatureBits(99, PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
+		WithMinFinalCLTVExpiryDelta(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})

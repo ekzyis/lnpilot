@@ -34,6 +34,9 @@ type PaymentRequest struct {
 	Features        bolt09.FeatureVector
 	FallbackAddress string
 
+	// Minimum CLTV expiry delta to use for the last HTLC in the route.
+	MinFinalCLTVExpiryDelta uint16
+
 	// taggedFields keeps track of the order the tagged fields were specified in
 	// so we can include them in the same order in the bech32 encoding of the
 	// payment request.
@@ -96,6 +99,9 @@ const (
 	// fieldTypeR is a repeatable field containing a routing hint with one or
 	// more hops.
 	fieldTypeR TaggedFieldType = 3
+	// fieldTypeC is the field containing the minimum CLTV expiry delta to use
+	// for the last HTLC in the route.
+	fieldTypeC TaggedFieldType = 24
 
 	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
 	// or 640 bytes of data in a single field.
@@ -120,6 +126,7 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 			WithRandomPaymentSecret(),
 			WithRandomPaymentHash(),
 			WithExpiry(time.Hour),
+			WithMinFinalCLTVExpiryDelta(18),
 		},
 		options...,
 	)
@@ -236,6 +243,13 @@ func WithRoutingHint(
 	return func(pr *PaymentRequest) {
 		pr.RoutingHints = append(pr.RoutingHints, lntypes.NewRoutingHint(hops))
 		pr.taggedFields = append(pr.taggedFields, fieldTypeR)
+	}
+}
+
+func WithMinFinalCLTVExpiryDelta(minFinalCLTVExpiryDelta uint16) func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		pr.MinFinalCLTVExpiryDelta = minFinalCLTVExpiryDelta
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeC)
 	}
 }
 
@@ -406,6 +420,11 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 			return nil, ErrFieldDataNotFound
 		}
 		return hint, nil
+	case fieldTypeC:
+		if pr.MinFinalCLTVExpiryDelta != 0 {
+			return NewVarUintBolt11Encoder(uint(pr.MinFinalCLTVExpiryDelta)), nil
+		}
+		return nil, ErrFieldDataNotFound
 	}
 	return nil, ErrUnknownFieldType
 }
