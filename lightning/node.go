@@ -9,8 +9,8 @@ import (
 )
 
 type Node struct {
-	privateKey *secp256k1.PrivateKey
-	publicKey  *secp256k1.PublicKey
+	privateKey *lntypes.NodePrivateKey
+	publicKey  *lntypes.NodePublicKey
 	network    lntypes.Network
 }
 
@@ -26,8 +26,8 @@ func NewNode(options ...func(*Node)) *Node {
 		if err != nil {
 			log.Fatalf("failed to generate private key: %v", err)
 		}
-		node.privateKey = privateKey
-		node.publicKey = privateKey.PubKey()
+		node.privateKey = lntypes.NewNodePrivateKey(privateKey)
+		node.publicKey = node.privateKey.PubKey()
 	}
 
 	if node.network == "" {
@@ -37,7 +37,7 @@ func NewNode(options ...func(*Node)) *Node {
 	return node
 }
 
-func WithPrivateKey(privateKey *secp256k1.PrivateKey) func(*Node) {
+func WithPrivateKey(privateKey *lntypes.NodePrivateKey) func(*Node) {
 	return func(node *Node) {
 		node.privateKey = privateKey
 	}
