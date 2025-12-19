@@ -292,8 +292,6 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 	// 029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
 	// then 039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
 
-	t.Skip("tagged field r not supported yet")
-
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -303,7 +301,22 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescriptionHash(longDescriptionHash),
 		WithFallbackAddress("1RustyRX2oai4EYYDpQGWvEL62BBGqN9T"), // P2PKH
-		// TODO: add routing info (r) from test vector
+		WithRoutingHint(
+			lntypes.NewHopHint(
+				lntypes.MustParseNodePublicKeyFromHex("029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255"),
+				lntypes.MustParseShortChannelID("66051x263430x1800"),
+				lntypes.MilliSatoshi(1),
+				20,
+				3,
+			),
+			lntypes.NewHopHint(
+				lntypes.MustParseNodePublicKeyFromHex("039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255"),
+				lntypes.MustParseShortChannelID("197637x395016x2314"),
+				lntypes.MilliSatoshi(2),
+				30,
+				4,
+			),
+		),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 		WithExpiry(0),
 	)
@@ -425,7 +438,7 @@ func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
 	// Please send 0.00967878534 BTC for a list of items
 	// within one week, amount in pico-BTC
 
-	t.Skip("tagged fields c and r not supported yet")
+	t.Skip("tagged field c not supported yet")
 
 	assert := assert.New(t)
 
@@ -439,7 +452,15 @@ func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
 		WithDescription("Blockstream Store: 88.85 USD for Blockstream Ledger Nano S x 1, \"Back In My Day\" Sticker x 2, \"I Got Lightning Working\" Sticker x 2 and 1 more items"),
 		WithExpiry(604800*time.Second),
 		// TODO: add min_final_cltv_expiry_delta (c) field from test vector
-		// TODO: add routing info (r) from test vector
+		WithRoutingHint(
+			lntypes.NewHopHint(
+				lntypes.MustParseNodePublicKeyFromHex("03d06758583bb5154774a6eb221b1276c9e82d65bbaceca806d90e20c108f4b1c7"),
+				lntypes.MustParseShortChannelID("589390x3312x1"),
+				lntypes.MilliSatoshi(1000),
+				2500,
+				40,
+			),
+		),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
 	)
 

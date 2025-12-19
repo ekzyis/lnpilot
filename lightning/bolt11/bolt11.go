@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"iter"
 	"slices"
 	"time"
 
@@ -37,6 +38,13 @@ type PaymentRequest struct {
 	// so we can include them in the same order in the bech32 encoding of the
 	// payment request.
 	taggedFields []TaggedFieldType
+
+	RoutingHints []*lntypes.RoutingHint
+
+	// routingHintNext returns the next routing hint we should write to the
+	// bech32 encoded payment request when we encounter another `r` tagged
+	// field. It is initialized before writing the tagged fields.
+	routingHintNext func() (*lntypes.RoutingHint, bool)
 }
 
 // bolt09 feature bits that can be set in a bolt11 payment request.
@@ -85,6 +93,9 @@ const (
 	fieldType9 TaggedFieldType = 5
 	// fieldTypeF is the field containing the fallback address.
 	fieldTypeF TaggedFieldType = 9
+	// fieldTypeR is a repeatable field containing a routing hint with one or
+	// more hops.
+	fieldTypeR TaggedFieldType = 3
 
 	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
 	// or 640 bytes of data in a single field.
@@ -219,6 +230,15 @@ func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
 	}
 }
 
+func WithRoutingHint(
+	hops ...*lntypes.HopHint,
+) func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		pr.RoutingHints = append(pr.RoutingHints, lntypes.NewRoutingHint(hops))
+		pr.taggedFields = append(pr.taggedFields, fieldTypeR)
+	}
+}
+
 // EncodeBech32 returns the bech32 encoded and signed payment request
 func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) {
 	// TODO: validate pr first?
@@ -316,6 +336,10 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 }
 
 func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
+	var stop func()
+	pr.routingHintNext, stop = iter.Pull(slices.Values(pr.RoutingHints))
+	defer stop()
+
 	for _, fieldType := range pr.taggedFields {
 		data, err := getTaggedFieldData(pr, fieldType)
 		if err == ErrFieldDataNotFound {
@@ -376,6 +400,12 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 		return nil, ErrFieldDataNotFound
 	case fieldType9:
 		return pr.Features, nil
+	case fieldTypeR:
+		hint, ok := pr.routingHintNext()
+		if !ok {
+			return nil, ErrFieldDataNotFound
+		}
+		return hint, nil
 	}
 	return nil, ErrUnknownFieldType
 }
