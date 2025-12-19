@@ -83,14 +83,17 @@ func (a *P2PKHAddress) Encode() (string, error) {
 }
 
 func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
-}
-
-func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
 	base32Bytes, err := bech32.ConvertBits(a.PubKeyHash, 8, 5, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert pubkey hash to base32: %w", err)
+	}
+	return base32Bytes, nil
+}
+
+func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
+	base32Bytes, err := a.EncodeBase32()
+	if err != nil {
+		return nil, err
 	}
 	// 0x11 is the version byte for P2PKH addresses in bolt11 (17 in base10)
 	return append([]byte{0x11}, base32Bytes...), nil
