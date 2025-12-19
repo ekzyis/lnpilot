@@ -93,8 +93,6 @@ func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
 		return nil, fmt.Errorf("failed to convert pubkey hash to base32: %w", err)
 	}
 	// 0x11 is the version byte for P2PKH addresses in bolt11 (17 in base10)
-	// NOTE: this is now a specific encoding for bolt11 tagged fields, and not
-	// just the base32 encoding of the address. Rename interface?
 	return append([]byte{0x11}, base32Bytes...), nil
 }
 
