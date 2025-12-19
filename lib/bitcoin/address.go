@@ -9,12 +9,12 @@ import (
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ekzyis/lntutor/lib/base58"
 	"github.com/ekzyis/lntutor/lib/bech32"
+	liberr "github.com/ekzyis/lntutor/lib/error"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 	"golang.org/x/crypto/ripemd160"
 )
 
 var ErrInvalidLegacyAddress = errors.New("failed to decode as legacy address")
-var ErrNotImplemented = errors.New("not implemented")
 var ErrNoWitnessVersion = errors.New("no witness version")
 var ErrInvalidWitnessVersion = errors.New("invalid witness version")
 var ErrInvalidNetwork = errors.New("invalid network")
@@ -55,7 +55,7 @@ type P2SHAddress struct {
 
 func (a *SegwitAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", ErrNotImplemented
+	return "", liberr.ErrNotImplemented
 }
 
 func (a *SegwitAddress) EncodeBase32() ([]byte, error) {
@@ -76,22 +76,22 @@ func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
 
 func (a *P2PKAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", ErrNotImplemented
+	return "", liberr.ErrNotImplemented
 }
 
 func (a *P2PKAddress) EncodeBase32() ([]byte, error) {
 	// TODO: implement
-	return nil, ErrNotImplemented
+	return nil, liberr.ErrNotImplemented
 }
 
 func (a *P2PKAddress) EncodeBolt11() ([]byte, error) {
 	// TODO: implement
-	return nil, ErrNotImplemented
+	return nil, liberr.ErrNotImplemented
 }
 
 func (a *P2PKHAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", ErrNotImplemented
+	return "", liberr.ErrNotImplemented
 }
 
 func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
@@ -113,7 +113,7 @@ func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
 
 func (a *P2SHAddress) Encode() (string, error) {
 	// TODO: implement
-	return "", ErrNotImplemented
+	return "", liberr.ErrNotImplemented
 }
 
 func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
