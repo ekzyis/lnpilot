@@ -239,13 +239,13 @@ func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) 
 
 	timestampBase32, err := NewUintBolt11Encoder(uint(pr.Timestamp.Unix()), 35).EncodeBolt11()
 	if err != nil {
-		return "", fmt.Errorf("failed to encode timestamp: %v", err)
+		return "", fmt.Errorf("failed to encode timestamp: %w", err)
 	}
 	buf.Write(timestampBase32)
 
 	err = pr.writeTaggedFields(&buf)
 	if err != nil {
-		return "", fmt.Errorf("failed to write tagged fields: %v", err)
+		return "", fmt.Errorf("failed to write tagged fields: %w", err)
 	}
 
 	hrp, err := pr.humanReadablePart()
@@ -255,12 +255,12 @@ func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) 
 
 	err = pr.sign(signer, &buf, hrp)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign payment request: %v", err)
+		return "", fmt.Errorf("failed to sign payment request: %w", err)
 	}
 
 	encoded, err := bech32.Encode(hrp, buf.Bytes())
 	if err != nil {
-		return "", fmt.Errorf("failed to encode payment request as bech32: %v", err)
+		return "", fmt.Errorf("failed to encode payment request as bech32: %w", err)
 	}
 	return encoded, nil
 }
@@ -271,7 +271,7 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 		return pr.Network.Prefix(), nil
 	}()
 	if err != nil {
-		return "", fmt.Errorf("failed to encode network: %v", err)
+		return "", fmt.Errorf("failed to encode network: %w", err)
 	}
 
 	if pr.Msats == 0 {
@@ -309,7 +309,7 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 		return lntypes.Bitcoin(units), multiplier, nil
 	}()
 	if err != nil {
-		return "", fmt.Errorf("failed to encode amount: %v", err)
+		return "", fmt.Errorf("failed to encode amount: %w", err)
 	}
 
 	return fmt.Sprintf("%s%d%s", prefix, amt, multiplier), nil
@@ -322,11 +322,11 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 			continue
 		}
 		if err != nil {
-			return fmt.Errorf("failed to get tagged field data: %x: %v", fieldType, err)
+			return fmt.Errorf("failed to get tagged field data: %x: %w", fieldType, err)
 		}
 		err = writeTaggedField(buf, fieldType, data)
 		if err != nil {
-			return fmt.Errorf("failed to write tagged field: %x: %v", fieldType, err)
+			return fmt.Errorf("failed to write tagged field: %x: %w", fieldType, err)
 		}
 	}
 
@@ -369,7 +369,7 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 		if pr.FallbackAddress != "" {
 			addr, err := bitcoin.DecodeAddress(pr.FallbackAddress)
 			if err != nil {
-				return nil, fmt.Errorf("failed to decode fallback address: %v", err)
+				return nil, fmt.Errorf("failed to decode fallback address: %w", err)
 			}
 			return addr, nil
 		}
@@ -405,7 +405,7 @@ func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11E
 
 	dataLengthBase32, err := bech32.NewUintBase32Encoder(uint(tf.DataLength), 10).EncodeBase32()
 	if err != nil {
-		return fmt.Errorf("failed to encode data length: %v", err)
+		return fmt.Errorf("failed to encode data length: %w", err)
 	}
 	buf.Write(dataLengthBase32)
 
@@ -420,7 +420,7 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	// The signature is over the sha256 hash of hrp + data part encoded in base256.
 	bufBase256, err := bech32.ConvertBits(buf.Bytes(), 5, 8, true)
 	if err != nil {
-		return fmt.Errorf("failed to convert buffer to base256: %v", err)
+		return fmt.Errorf("failed to convert buffer to base256: %w", err)
 	}
 	// hrp as utf-8 bytes
 	msg := append([]byte(hrp), bufBase256...)
@@ -428,7 +428,7 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	// this will hash the message before signing
 	sig, err := signer.CompactECDSASign(msg)
 	if err != nil {
-		return fmt.Errorf("failed to sign message: %v", err)
+		return fmt.Errorf("failed to sign message: %w", err)
 	}
 
 	var sigBytes bytes.Buffer
@@ -437,7 +437,7 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	sigBytes.WriteByte(sig.RecoveryId)
 	sigBase32, err := bech32.ConvertBits(sigBytes.Bytes(), 8, 5, true)
 	if err != nil {
-		return fmt.Errorf("failed to convert signature to base32: %v", err)
+		return fmt.Errorf("failed to convert signature to base32: %w", err)
 	}
 
 	buf.Write(sigBase32)

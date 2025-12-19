@@ -24,7 +24,7 @@ func NewNode(options ...func(*Node)) *Node {
 	if node.privateKey == nil {
 		privateKey, err := secp256k1.GeneratePrivateKey()
 		if err != nil {
-			log.Fatalf("failed to generate private key: %v", err)
+			log.Fatalf("failed to generate private key: %w", err)
 		}
 		node.privateKey = lntypes.NewNodePrivateKey(privateKey)
 		node.publicKey = node.privateKey.PubKey()
