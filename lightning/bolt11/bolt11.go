@@ -44,6 +44,11 @@ type PaymentRequest struct {
 
 	RoutingHints []*lntypes.RoutingHint
 
+	// PaymentMetadata is additional metadata to attach to the payment. This
+	// supports applications where the recipient doesn't keep any context for
+	// the payment.
+	PaymentMetadata []byte
+
 	// routingHintNext returns the next routing hint we should write to the
 	// bech32 encoded payment request when we encounter another `r` tagged
 	// field. It is initialized before writing the tagged fields.
@@ -102,6 +107,8 @@ const (
 	// fieldTypeC is the field containing the minimum CLTV expiry delta to use
 	// for the last HTLC in the route.
 	fieldTypeC TaggedFieldType = 24
+	// fieldTypeM is the field containing the payment metadata.
+	fieldTypeM TaggedFieldType = 27
 
 	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
 	// or 640 bytes of data in a single field.
@@ -267,6 +274,13 @@ func WithDefaultMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
 
 func WithNoMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
 	return WithMinFinalCLTVExpiryDelta(0)
+}
+
+func WithPaymentMetadata(paymentMetadata []byte) func(*PaymentRequest) {
+	return func(pr *PaymentRequest) {
+		pr.PaymentMetadata = paymentMetadata
+		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeM)
+	}
 }
 
 // EncodeBech32 returns the bech32 encoded and signed payment request
@@ -439,6 +453,11 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 	case fieldTypeC:
 		if pr.MinFinalCLTVExpiryDelta != 0 {
 			return NewVarUintBolt11Encoder(uint(pr.MinFinalCLTVExpiryDelta)), nil
+		}
+		return nil, ErrFieldDataNotFound
+	case fieldTypeM:
+		if len(pr.PaymentMetadata) > 0 {
+			return NewBytesBolt11Encoder(pr.PaymentMetadata), nil
 		}
 		return nil, ErrFieldDataNotFound
 	}

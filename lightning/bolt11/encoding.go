@@ -10,6 +10,10 @@ type Bolt11Encoder interface {
 // Every Bolt11Encoder must also implement bech32.Base32Encoder
 var _ bech32.Base32Encoder = (Bolt11Encoder)(nil)
 
+type BytesBolt11Encoder struct {
+	*bech32.BytesBase32Encoder
+}
+
 type StringBolt11Encoder struct {
 	*bech32.BytesBase32Encoder
 }
@@ -22,6 +26,10 @@ type UintBolt11Encoder struct {
 	*bech32.UintBase32Encoder
 }
 
+func (e BytesBolt11Encoder) EncodeBolt11() ([]byte, error) {
+	return e.EncodeBase32()
+}
+
 func (e StringBolt11Encoder) EncodeBolt11() ([]byte, error) {
 	return e.EncodeBase32()
 }
@@ -32,6 +40,11 @@ func (e VarUintBolt11Encoder) EncodeBolt11() ([]byte, error) {
 
 func (e UintBolt11Encoder) EncodeBolt11() ([]byte, error) {
 	return e.EncodeBase32()
+}
+
+func NewBytesBolt11Encoder(data []byte) Bolt11Encoder {
+	encoder := bech32.NewBytesBase32Encoder(data)
+	return BytesBolt11Encoder{BytesBase32Encoder: &encoder}
 }
 
 func NewStringBolt11Encoder(data string) Bolt11Encoder {

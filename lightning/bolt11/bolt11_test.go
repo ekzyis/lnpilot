@@ -536,20 +536,20 @@ func TestPaymentRequest_DecodeBech32_Spec_014(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_015(t *testing.T) {
 	// Please send 0.01 BTC with payment metadata 0x01fafaf0
 
-	t.Skip("tagged field m not supported yet")
-
 	assert := assert.New(t)
 
-	paymentHashBytes, _ := hex.DecodeString("462264ede7e14047e9b249da94fefc47f41f7d02ee9b091815a5506bc8abf75f")
+	paymentMetadata, _ := hex.DecodeString("01fafaf0")
 
 	pr := NewPaymentRequest(
 		1_000_000_000,
 		WithTimestamp(timestamp),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("payment metadata inside"),
-		// TODO: add payment metadata (m) field from test vector
+		WithPaymentMetadata(paymentMetadata),
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithFeatureBits(48, PaymentSecretRequired, VarOnionOptinRequired),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
