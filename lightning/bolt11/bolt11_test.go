@@ -347,8 +347,6 @@ func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
 	// On mainnet, with fallback (P2WPKH) address
 	// bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
 
-	t.Skip("tagged field f (P2WPKH) not supported yet")
-
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -375,8 +373,6 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 	// On mainnet, with fallback (P2WSH) address
 	// bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3
 
-	t.Skip("tagged field f (P2WSH) not supported yet")
-
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -402,8 +398,6 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 	// On mainnet, with fallback (P2TR) address
 	// bc1pptdvg0d2nj99568qn6ssdy4cygnwuxgw2ukmnwgwz7jpqjz2kszse2s3lm
-
-	t.Skip("tagged field f (P2TR) not supported yet")
 
 	assert := assert.New(t)
 

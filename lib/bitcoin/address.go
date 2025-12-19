@@ -15,6 +15,12 @@ import (
 
 var ErrInvalidLegacyAddress = errors.New("failed to decode as legacy address")
 var ErrNotImplemented = errors.New("not implemented")
+var ErrNoWitnessVersion = errors.New("no witness version")
+var ErrInvalidWitnessVersion = errors.New("invalid witness version")
+var ErrInvalidNetwork = errors.New("invalid network")
+
+var Version0 = bech32.Version0
+var VersionM = bech32.VersionM
 
 type Address interface {
 	// Encode encodes the address into the appropriate format
@@ -53,13 +59,19 @@ func (a *SegwitAddress) Encode() (string, error) {
 }
 
 func (a *SegwitAddress) EncodeBase32() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
+	base32Bytes, err := bech32.ConvertBits(a.Program, 8, 5, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert witness program to base32: %w", err)
+	}
+	return base32Bytes, nil
 }
 
 func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
+	base32Bytes, err := a.EncodeBase32()
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte{a.Version}, base32Bytes...), nil
 }
 
 func (a *P2PKAddress) Encode() (string, error) {
@@ -143,9 +155,68 @@ func isSegwitAddress(addr string) bool {
 	return strings.HasPrefix(addr, "bc1") || strings.HasPrefix(addr, "tb1")
 }
 
+// DecodeSegwitAddress decodes a segwit address - duh!
 func DecodeSegwitAddress(addr string) (*SegwitAddress, error) {
-	// TODO: implement
-	return nil, nil
+	hrp, data, bech32version, err := bech32.DecodeGeneric(addr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode segwit address: %w", err)
+	}
+
+	var network lntypes.Network
+	switch hrp {
+	case "bc":
+		network = lntypes.NetworkMainnet
+	case "tb":
+		network = lntypes.NetworkTestnet
+	default:
+		return nil, fmt.Errorf("invalid network: %s", hrp)
+	}
+
+	// The first byte of the decoded address is the witness version, it must
+	// exist.
+	if len(data) < 1 {
+		return nil, ErrNoWitnessVersion
+	}
+
+	// ...and be <= 16.
+	version := data[0]
+	if version > 16 {
+		return nil, ErrInvalidWitnessVersion
+	}
+
+	// The remaining characters of the address returned are grouped into
+	// words of 5 bits. In order to restore the original witness program
+	// bytes, we'll need to regroup into 8 bit words.
+	base256, err := bech32.ConvertBits(data[1:], 5, 8, false)
+	if err != nil {
+		return nil, err
+	}
+
+	// The regrouped data must be between 2 and 40 bytes.
+	if len(base256) < 2 || len(base256) > 40 {
+		return nil, fmt.Errorf("invalid data length")
+	}
+
+	// For witness version 0, address MUST be exactly 20 or 32 bytes.
+	if version == 0 && len(base256) != 20 && len(base256) != 32 {
+		return nil, fmt.Errorf("invalid data length for witness version 0: %v", len(base256))
+	}
+
+	// For witness version 0, the bech32 encoding must be used.
+	if version == 0 && bech32version != bech32.Version0 {
+		return nil, fmt.Errorf("invalid encoding for witness version 0: expected bech32, got %v", bech32version)
+	}
+
+	// For witness version 1, the bech32m encoding must be used.
+	if version == 1 && bech32version != bech32.VersionM {
+		return nil, fmt.Errorf("invalid encoding for witness version 1: expected bech32m, got %v", bech32version)
+	}
+
+	return &SegwitAddress{
+		Network: network,
+		Version: version,
+		Program: base256,
+	}, nil
 }
 
 func DecodeLegacyAddress(addr string) (Address, error) {

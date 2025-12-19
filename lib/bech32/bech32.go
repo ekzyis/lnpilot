@@ -7,6 +7,10 @@ import (
 	"github.com/btcsuite/btcd/btcutil/bech32"
 )
 
+var Version0 = bech32.Version0
+var VersionM = bech32.VersionM
+var VersionUnknown = bech32.VersionUnknown
+
 type Base32Encoder interface {
 	EncodeBase32() ([]byte, error)
 }
@@ -89,6 +93,18 @@ func (e VarUintBase32Encoder) EncodeBase32() ([]byte, error) {
 // Encode encodes base32-encoded data into a bech32 string.
 func Encode(hrp string, data []byte) (string, error) {
 	return bech32.Encode(hrp, data)
+}
+
+// Decode decodes a bech32 encoded string, returning the human-readable part and
+// the data part excluding the checksum.
+func Decode(bech string) (string, []byte, error) {
+	return bech32.Decode(bech)
+}
+
+// DecodeGeneric decodes a bech32 encoded string, returning the human-readable part,
+// the data part excluding the checksum, and the version.
+func DecodeGeneric(bech string) (string, []byte, bech32.Version, error) {
+	return bech32.DecodeGeneric(bech)
 }
 
 // ConvertBits converts a byte array from one bit length to another.
