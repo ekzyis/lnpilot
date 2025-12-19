@@ -125,8 +125,8 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 		[]func(*PaymentRequest){
 			WithRandomPaymentSecret(),
 			WithRandomPaymentHash(),
-			WithExpiry(time.Hour),
-			WithMinFinalCLTVExpiryDelta(18),
+			WithDefaultExpiry(),
+			WithDefaultMinFinalCLTVExpiryDelta(),
 		},
 		options...,
 	)
@@ -230,6 +230,14 @@ func WithExpiry(expiry time.Duration) func(*PaymentRequest) {
 	}
 }
 
+func WithDefaultExpiry() func(*PaymentRequest) {
+	return WithExpiry(time.Hour)
+}
+
+func WithNoExpiry() func(*PaymentRequest) {
+	return WithExpiry(0)
+}
+
 func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		pr.FallbackAddress = fallbackAddress
@@ -251,6 +259,14 @@ func WithMinFinalCLTVExpiryDelta(minFinalCLTVExpiryDelta uint16) func(*PaymentRe
 		pr.MinFinalCLTVExpiryDelta = minFinalCLTVExpiryDelta
 		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeC)
 	}
+}
+
+func WithDefaultMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
+	return WithMinFinalCLTVExpiryDelta(18)
+}
+
+func WithNoMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
+	return WithMinFinalCLTVExpiryDelta(0)
 }
 
 // EncodeBech32 returns the bech32 encoded and signed payment request

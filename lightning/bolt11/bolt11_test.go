@@ -187,8 +187,8 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("Please consider supporting this project"),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -212,7 +212,7 @@ func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
 		WithDescription("1 cup coffee"),
 		WithExpiry(60*time.Second),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -237,7 +237,7 @@ func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
 		WithDescription("ナンセンス 1杯"),
 		WithExpiry(60*time.Second),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
@@ -260,8 +260,8 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescriptionHash(longDescriptionHash),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -287,8 +287,8 @@ func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithFallbackAddress("mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP"), // P2PKH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -332,8 +332,8 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 			),
 		),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -359,8 +359,8 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithFallbackAddress("3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX"), // P2SH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -386,8 +386,8 @@ func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithFallbackAddress("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"), // P2WPKH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -413,8 +413,8 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithFallbackAddress("bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3"), // P2WSH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -440,8 +440,8 @@ func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 		WithDescriptionHash(longDescriptionHash),
 		WithFallbackAddress("bc1pptdvg0d2nj99568qn6ssdy4cygnwuxgw2ukmnwgwz7jpqjz2kszse2s3lm"), // P2TR
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
@@ -504,8 +504,8 @@ func TestPaymentRequest_EncodeBech32_Spec_012(t *testing.T) {
 		WithDescription("coffee beans"),
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithFeatureBits(99, PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
-		WithMinFinalCLTVExpiryDelta(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
