@@ -321,8 +321,6 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 	// On mainnet, with fallback (P2SH) address
 	// 3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX
 
-	t.Skip("tagged field f (P2SH) not supported yet")
-
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
@@ -331,9 +329,9 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
 		WithDescriptionHash(longDescriptionHash),
 		WithPaymentHash([32]byte(paymentHashBytes)),
-		WithExpiry(0),
 		WithFallbackAddress("3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX"), // P2SH
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
+		WithExpiry(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})

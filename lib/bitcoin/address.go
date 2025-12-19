@@ -105,13 +105,20 @@ func (a *P2SHAddress) Encode() (string, error) {
 }
 
 func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
+	base32Bytes, err := bech32.ConvertBits(a.ScriptHash, 8, 5, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert script hash to base32: %w", err)
+	}
+	return base32Bytes, nil
 }
 
 func (a *P2SHAddress) EncodeBolt11() ([]byte, error) {
-	// TODO: implement
-	return nil, ErrNotImplemented
+	base32Bytes, err := a.EncodeBase32()
+	if err != nil {
+		return nil, err
+	}
+	// 0x12 is the version byte for P2SH addresses in bolt11 (18 in base10)
+	return append([]byte{0x12}, base32Bytes...), nil
 }
 
 // DecodeAddress decodes a base58 (legacy) or bech32 (segwit) address.
