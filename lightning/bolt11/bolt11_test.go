@@ -478,26 +478,23 @@ func TestPaymentRequest_EncodeBech32_Spec_012(t *testing.T) {
 	// which supports features 8, 14 and 99, using secret
 	// 0x1111111111111111111111111111111111111111111111111111111111111111
 
-	t.Skip("tagged field r and c not supported yet")
-
 	assert := assert.New(t)
 
 	pr := NewPaymentRequest(
 		2_500_000_000,
-		WithTimestamp(time.Unix(1572468703, 0)),
+		WithTimestamp(timestamp),
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("coffee beans"),
 		WithPaymentSecret([32]byte(paymentSecretBytes)),
-		// TODO: add min_final_cltv_expiry_delta (c) field from test vector
-		// TODO: add routing info (r) from test vector
 		WithFeatureBits(99, PaymentSecretRequired, VarOnionOptinRequired),
+		WithExpiry(0),
 	)
 
 	encoded, err := pr.EncodeBech32(&TestSigner{})
 
 	assert.NoError(err)
 	assert.Equal(
-		"lnbc9678785340p1pwmna7lpp5gc3xfm08u9qy06djf8dfflhugl6p7lgza6dsjxq454gxhj9t7a0sd8dgfkx7cmtwd68yetpd5s9xar0wfjn5gpc8qhrsdfq24f5ggrxdaezqsnvda3kkum5wfjkzmfqf3jkgem9wgsyuctwdus9xgrcyqcjcgpzgfskx6eqf9hzqnteypzxz7fzypfhg6trddjhygrcyqezcgpzfysywmm5ypxxjemgw3hxjmn8yptk7untd9hxwg3q2d6xjcmtv4ezq7pqxgsxzmnyyqcjqmt0wfjjq6t5v4khxsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygsxqyjw5qcqp2rzjq0gxwkzc8w6323m55m4jyxcjwmy7stt9hwkwe2qxmy8zpsgg7jcuwz87fcqqeuqqqyqqqqlgqqqqn3qq9q9qrsgqrvgkpnmps664wgkp43l22qsgdw4ve24aca4nymnxddlnp8vh9v2sdxlu5ywdxefsfvm0fq3sesf08uf6q9a2ke0hc9j6z6wlxg5z5kqpu2v9wz",
+		"lnbc25m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5vdhkven9v5sxyetpdeessp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9q5sqqqqqqqqqqqqqqqqsgq2a25dxl5hrntdtn6zvydt7d66hyzsyhqs4wdynavys42xgl6sgx9c4g7me86a27t07mdtfry458rtjr0v92cnmswpsjscgt2vcse3sgpz3uapa",
 		encoded,
 	)
 }
