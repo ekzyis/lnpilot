@@ -17,71 +17,50 @@ type FeatureVector struct {
 type FeatureBit uint16
 
 const (
-	DataLossProtectRequired FeatureBit = 0
-	DataLossProtectOptional FeatureBit = 1
-
+	DataLossProtectRequired       FeatureBit = 0
+	DataLossProtectOptional       FeatureBit = 1
 	UpfrontShutdownScriptRequired FeatureBit = 4
 	UpfrontShutdownScriptOptional FeatureBit = 5
-
-	GossipQueriesRequired FeatureBit = 6
-	GossipQueriesOptional FeatureBit = 7
-
-	VarOnionOptinRequired FeatureBit = 8
-	VarOnionOptinOptional FeatureBit = 9
-
+	GossipQueriesRequired         FeatureBit = 6
+	GossipQueriesOptional         FeatureBit = 7
+	VarOnionOptinRequired         FeatureBit = 8
+	VarOnionOptinOptional         FeatureBit = 9
 	GossipQueriesExtendedRequired FeatureBit = 10
 	GossipQueriesExtendedOptional FeatureBit = 11
-
-	StaticRemotekeyRequired FeatureBit = 12
-	StaticRemotekeyOptional FeatureBit = 13
-
-	PaymentSecretRequired FeatureBit = 14
-	PaymentSecretOptional FeatureBit = 15
-
-	BasicMppRequired FeatureBit = 16
-	BasicMppOptional FeatureBit = 17
-
-	SupportLargeChannelRequired FeatureBit = 18
-	SupportLargeChannelOptional FeatureBit = 19
-
-	AnchorsRequired FeatureBit = 22
-	AnchorsOptional FeatureBit = 23
-
-	RouteBlindingRequired FeatureBit = 24
-	RouteBlindingOptional FeatureBit = 25
-
-	ShutdownAnysegwitRequired FeatureBit = 26
-	ShutdownAnysegwitOptional FeatureBit = 27
-
-	DualFundRequired FeatureBit = 28
-	DualFundOptional FeatureBit = 29
-
-	QuiesceRequired FeatureBit = 34
-	QuiesceOptional FeatureBit = 35
-
-	AttributionDataRequired FeatureBit = 36
-	AttributionDataOptional FeatureBit = 37
-
-	OnionMessagesRequired FeatureBit = 38
-	OnionMessagesOptional FeatureBit = 39
-
-	ProvideStorageRequired FeatureBit = 42
-	ProvideStorageOptional FeatureBit = 43
-
-	ChannelTypeRequired FeatureBit = 44
-	ChannelTypeOptional FeatureBit = 45
-
-	ScidAliasRequired FeatureBit = 46
-	ScidAliasOptional FeatureBit = 47
-
-	PaymentMetadataRequired FeatureBit = 48
-	PaymentMetadataOptional FeatureBit = 49
-
-	ZeroconfRequired FeatureBit = 50
-	ZeroconfOptional FeatureBit = 51
-
-	SimpleCloseRequired FeatureBit = 60
-	SimpleCloseOptional FeatureBit = 61
+	StaticRemotekeyRequired       FeatureBit = 12
+	StaticRemotekeyOptional       FeatureBit = 13
+	PaymentSecretRequired         FeatureBit = 14
+	PaymentSecretOptional         FeatureBit = 15
+	BasicMppRequired              FeatureBit = 16
+	BasicMppOptional              FeatureBit = 17
+	SupportLargeChannelRequired   FeatureBit = 18
+	SupportLargeChannelOptional   FeatureBit = 19
+	AnchorsRequired               FeatureBit = 22
+	AnchorsOptional               FeatureBit = 23
+	RouteBlindingRequired         FeatureBit = 24
+	RouteBlindingOptional         FeatureBit = 25
+	ShutdownAnysegwitRequired     FeatureBit = 26
+	ShutdownAnysegwitOptional     FeatureBit = 27
+	DualFundRequired              FeatureBit = 28
+	DualFundOptional              FeatureBit = 29
+	QuiesceRequired               FeatureBit = 34
+	QuiesceOptional               FeatureBit = 35
+	AttributionDataRequired       FeatureBit = 36
+	AttributionDataOptional       FeatureBit = 37
+	OnionMessagesRequired         FeatureBit = 38
+	OnionMessagesOptional         FeatureBit = 39
+	ProvideStorageRequired        FeatureBit = 42
+	ProvideStorageOptional        FeatureBit = 43
+	ChannelTypeRequired           FeatureBit = 44
+	ChannelTypeOptional           FeatureBit = 45
+	ScidAliasRequired             FeatureBit = 46
+	ScidAliasOptional             FeatureBit = 47
+	PaymentMetadataRequired       FeatureBit = 48
+	PaymentMetadataOptional       FeatureBit = 49
+	ZeroconfRequired              FeatureBit = 50
+	ZeroconfOptional              FeatureBit = 51
+	SimpleCloseRequired           FeatureBit = 60
+	SimpleCloseOptional           FeatureBit = 61
 )
 
 func NewFeatureVector(bits ...FeatureBit) *FeatureVector {

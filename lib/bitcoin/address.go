@@ -14,10 +14,9 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
-var ErrInvalidLegacyAddress = errors.New("failed to decode as legacy address")
-var ErrNoWitnessVersion = errors.New("no witness version")
-var ErrInvalidWitnessVersion = errors.New("invalid witness version")
-var ErrInvalidNetwork = errors.New("invalid network")
+var errInvalidLegacyAddress = errors.New("failed to decode as legacy address")
+var errNoWitnessVersion = errors.New("no witness version")
+var errInvalidWitnessVersion = errors.New("invalid witness version")
 
 var Version0 = bech32.Version0
 var VersionM = bech32.VersionM
@@ -140,7 +139,7 @@ func DecodeAddress(addr string) (Address, error) {
 	}
 
 	a, err := DecodeLegacyAddress(addr)
-	if err == ErrInvalidLegacyAddress {
+	if err == errInvalidLegacyAddress {
 		// we don't wrap the error because we don't want to assume it's a legacy
 		// address if we failed to decode it as such.
 		return nil, fmt.Errorf("failed to decode address: %s", addr)
@@ -175,13 +174,13 @@ func DecodeSegwitAddress(addr string) (*SegwitAddress, error) {
 	// The first byte of the decoded address is the witness version, it must
 	// exist.
 	if len(data) < 1 {
-		return nil, ErrNoWitnessVersion
+		return nil, errNoWitnessVersion
 	}
 
 	// ...and be <= 16.
 	version := data[0]
 	if version > 16 {
-		return nil, ErrInvalidWitnessVersion
+		return nil, errInvalidWitnessVersion
 	}
 
 	// The remaining characters of the address returned are grouped into words
@@ -252,5 +251,5 @@ func DecodeLegacyAddress(addr string) (Address, error) {
 			return &P2SHAddress{ScriptHash: hash160}, nil
 		}
 	}
-	return nil, ErrInvalidLegacyAddress
+	return nil, errInvalidLegacyAddress
 }

@@ -9,6 +9,11 @@ import (
 	"github.com/ekzyis/lntutor/lib/bech32"
 )
 
+const (
+	// The length of a hop hint in bytes.
+	hopHintLength = 51
+)
+
 // RoutingHint contains a list of hops that a node can use for pathfinding.
 type RoutingHint struct {
 	HopHints []*HopHint
@@ -22,10 +27,6 @@ type HopHint struct {
 	FeePPM          uint32          // 4 bytes
 	CLTVExpiryDelta uint16          // 2 bytes
 }
-
-const (
-	hopHintLength = 51
-)
 
 type ShortChannelID struct {
 	BlockHeight uint32 // 3 bytes

@@ -3,7 +3,6 @@ package bolt11
 import (
 	"bytes"
 	"crypto/rand"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"iter"
@@ -13,107 +12,12 @@ import (
 	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lib/bitcoin"
 	"github.com/ekzyis/lntutor/lib/secp256k1"
-	"github.com/ekzyis/lntutor/lightning/bolt09"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 )
 
-type PaymentRequest struct {
-	Network     lntypes.Network
-	Msats       lntypes.MilliSatoshi
-	Timestamp   time.Time
-	Expiry      time.Duration
-	PaymentHash lntypes.Hash
-
-	// PaymentSecret makes sure the recipient can tell if the onion payload was
-	// constructed by the sender. If it's not included, the last hop can steal
-	// overpaid amount from the sender by 'probing' with a smaller amount first.
-	// see https://bitcoin.stackexchange.com/a/115738
-	PaymentSecret   lntypes.Hash
-	Description     string
-	DescriptionHash lntypes.Hash
-	Features        bolt09.FeatureVector
-	FallbackAddress string
-
-	// Minimum CLTV expiry delta to use for the last HTLC in the route.
-	MinFinalCLTVExpiryDelta uint16
-
-	// taggedFields keeps track of the order the tagged fields were specified in
-	// so we can include them in the same order in the bech32 encoding of the
-	// payment request.
-	taggedFields []TaggedFieldType
-
-	RoutingHints []*lntypes.RoutingHint
-
-	// PaymentMetadata is additional metadata to attach to the payment. This
-	// supports applications where the recipient doesn't keep any context for
-	// the payment.
-	PaymentMetadata []byte
-
-	// routingHintNext returns the next routing hint we should write to the
-	// bech32 encoded payment request when we encounter another `r` tagged
-	// field. It is initialized before writing the tagged fields.
-	routingHintNext func() (*lntypes.RoutingHint, bool)
-}
-
-// bolt09 feature bits that can be set in a bolt11 payment request.
-type FeatureBit uint16
-
-const (
-	// this bit is marked as assumed in bolt09, but for some reason, there's a
-	// test vector with this bit set.
-	VarOnionOptinRequired FeatureBit = FeatureBit(bolt09.VarOnionOptinRequired)
-
-	PaymentSecretRequired FeatureBit = FeatureBit(bolt09.PaymentSecretRequired)
-	PaymentSecretOptional FeatureBit = FeatureBit(bolt09.PaymentSecretOptional)
-
-	BasicMppRequired FeatureBit = FeatureBit(bolt09.BasicMppRequired)
-	BasicMppOptional FeatureBit = FeatureBit(bolt09.BasicMppOptional)
-
-	RouteBlindingRequired FeatureBit = FeatureBit(bolt09.RouteBlindingRequired)
-	RouteBlindingOptional FeatureBit = FeatureBit(bolt09.RouteBlindingOptional)
-
-	AttributionDataRequired FeatureBit = FeatureBit(bolt09.AttributionDataRequired)
-	AttributionDataOptional FeatureBit = FeatureBit(bolt09.AttributionDataOptional)
-
-	PaymentMetadataRequired FeatureBit = FeatureBit(bolt09.PaymentMetadataRequired)
-	PaymentMetadataOptional FeatureBit = FeatureBit(bolt09.PaymentMetadataOptional)
-)
-
-type TaggedField struct {
-	FieldType  TaggedFieldType // must be encoded as 5 bits
-	DataLength uint16          // must be encoded as 10 bits, big-endian (maximum is 1023)
-	Data       []byte          // must be encoded as 5 x data_length bits (maximum is 640 bytes)
-}
-
-type TaggedFieldType = byte
-
-const (
-	// fieldTypeP is the field containing the payment hash.
-	fieldTypeP TaggedFieldType = 1
-	// fieldTypeS is the field containing the payment secret.
-	fieldTypeS TaggedFieldType = 16
-	// fieldTypeD is the field containing the description.
-	fieldTypeD TaggedFieldType = 13
-	// fieldTypeH is the field containing the description hash.
-	fieldTypeH TaggedFieldType = 23
-	// fieldTypeX is the field containing the expiry.
-	fieldTypeX TaggedFieldType = 6
-	// fieldType9 is the field containing the feature bits.
-	fieldType9 TaggedFieldType = 5
-	// fieldTypeF is the field containing the fallback address.
-	fieldTypeF TaggedFieldType = 9
-	// fieldTypeR is a repeatable field containing a routing hint with one or
-	// more hops.
-	fieldTypeR TaggedFieldType = 3
-	// fieldTypeC is the field containing the minimum CLTV expiry delta to use
-	// for the last HTLC in the route.
-	fieldTypeC TaggedFieldType = 24
-	// fieldTypeM is the field containing the payment metadata.
-	fieldTypeM TaggedFieldType = 27
-
-	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
-	// or 640 bytes of data in a single field.
-	MaxDescriptionBytes = 639
+var (
+	errFieldDataNotFound = errors.New("field data not found")
+	errUnknownFieldType  = errors.New("unknown field type")
 )
 
 func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentRequest {
@@ -144,145 +48,6 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 	}
 
 	return pr
-}
-
-func WithNetwork(network lntypes.Network) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.Network = network
-	}
-}
-
-func WithTimestamp(timestamp time.Time) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.Timestamp = timestamp
-	}
-}
-
-func WithPaymentHash(paymentHash [32]byte) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.PaymentHash = lntypes.Hash(paymentHash)
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeP)
-	}
-}
-
-func WithRandomPaymentHash() func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		var preimage lntypes.Preimage
-		rand.Read(preimage[:])
-		WithPaymentHash(preimage.Hash())(pr)
-		// TODO: how to return preimage to caller?
-	}
-}
-
-func WithPaymentSecret(paymentSecret [32]byte) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.PaymentSecret = lntypes.Hash(paymentSecret)
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeS)
-	}
-}
-
-func WithRandomPaymentSecret() func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		var paymentSecret lntypes.Hash
-		rand.Read(paymentSecret[:])
-		WithPaymentSecret(paymentSecret)(pr)
-	}
-}
-
-func WithDescription(description string) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		descBytes := []byte(description)
-		if len(descBytes) <= MaxDescriptionBytes {
-			pr.Description = description
-			pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeD)
-
-			// clear any existing description hash
-			pr.DescriptionHash = lntypes.Hash{}
-			pr.taggedFields = remove(pr.taggedFields, fieldTypeH)
-			return
-		}
-
-		// description too long, use hash instead
-		pr.DescriptionHash = sha256.Sum256(descBytes)
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeH)
-
-		// clear any existing description
-		pr.Description = ""
-		pr.taggedFields = remove(pr.taggedFields, fieldTypeD)
-	}
-}
-
-func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.DescriptionHash = lntypes.Hash(descriptionHash)
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeH)
-	}
-}
-
-func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		// Go does not allow a direct cast between []FeatureBit and
-		// []bolt09.FeatureBit
-		bolt09Bits := make([]bolt09.FeatureBit, len(featureBits))
-		for i, bit := range featureBits {
-			bolt09Bits[i] = bolt09.FeatureBit(bit)
-		}
-		pr.Features = *bolt09.NewFeatureVector(bolt09Bits...)
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldType9)
-	}
-}
-
-func WithExpiry(expiry time.Duration) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.Expiry = expiry
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeX)
-	}
-}
-
-func WithDefaultExpiry() func(*PaymentRequest) {
-	return WithExpiry(time.Hour)
-}
-
-func WithNoExpiry() func(*PaymentRequest) {
-	return WithExpiry(0)
-}
-
-func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.FallbackAddress = fallbackAddress
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeF)
-	}
-}
-
-func WithRoutingHint(
-	hops ...*lntypes.HopHint,
-) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.RoutingHints = append(pr.RoutingHints, lntypes.NewRoutingHint(hops))
-		pr.taggedFields = append(pr.taggedFields, fieldTypeR)
-	}
-}
-
-func WithMinFinalCLTVExpiryDelta(minFinalCLTVExpiryDelta uint16) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.MinFinalCLTVExpiryDelta = minFinalCLTVExpiryDelta
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeC)
-	}
-}
-
-func WithDefaultMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
-	return WithMinFinalCLTVExpiryDelta(18)
-}
-
-func WithNoMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
-	return WithMinFinalCLTVExpiryDelta(0)
-}
-
-func WithPaymentMetadata(paymentMetadata []byte) func(*PaymentRequest) {
-	return func(pr *PaymentRequest) {
-		pr.PaymentMetadata = paymentMetadata
-		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeM)
-	}
 }
 
 // EncodeBech32 returns the bech32 encoded and signed payment request
@@ -387,8 +152,8 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 	defer stop()
 
 	for _, fieldType := range pr.taggedFields {
-		data, err := getTaggedFieldData(pr, fieldType)
-		if err == ErrFieldDataNotFound {
+		data, err := pr.getTaggedFieldData(fieldType)
+		if err == errFieldDataNotFound {
 			continue
 		}
 		if err != nil {
@@ -405,36 +170,33 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 	return nil
 }
 
-var ErrFieldDataNotFound = errors.New("field data not found")
-var ErrUnknownFieldType = errors.New("unknown field type")
-
-func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11Encoder, error) {
+func (pr *PaymentRequest) getTaggedFieldData(fieldType TaggedFieldType) (Bolt11Encoder, error) {
 	switch fieldType {
 	case fieldTypeS:
 		if !pr.PaymentSecret.IsZero() {
 			return pr.PaymentSecret, nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldTypeP:
 		if !pr.PaymentHash.IsZero() {
 			return pr.PaymentHash, nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldTypeD:
 		if pr.Description != "" {
 			return NewStringBolt11Encoder(pr.Description), nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldTypeH:
 		if !pr.DescriptionHash.IsZero() {
 			return pr.DescriptionHash, nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldTypeX:
 		if pr.Expiry != 0 {
 			return NewVarUintBolt11Encoder(uint(pr.Expiry.Seconds())), nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldTypeF:
 		if pr.FallbackAddress != "" {
 			addr, err := bitcoin.DecodeAddress(pr.FallbackAddress)
@@ -443,27 +205,27 @@ func getTaggedFieldData(pr *PaymentRequest, fieldType TaggedFieldType) (Bolt11En
 			}
 			return addr, nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldType9:
 		return pr.Features, nil
 	case fieldTypeR:
 		hint, ok := pr.routingHintNext()
 		if !ok {
-			return nil, ErrFieldDataNotFound
+			return nil, errFieldDataNotFound
 		}
 		return hint, nil
 	case fieldTypeC:
 		if pr.MinFinalCLTVExpiryDelta != 0 {
 			return NewVarUintBolt11Encoder(uint(pr.MinFinalCLTVExpiryDelta)), nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	case fieldTypeM:
 		if len(pr.PaymentMetadata) > 0 {
 			return NewBytesBolt11Encoder(pr.PaymentMetadata), nil
 		}
-		return nil, ErrFieldDataNotFound
+		return nil, errFieldDataNotFound
 	}
-	return nil, ErrUnknownFieldType
+	return nil, errUnknownFieldType
 }
 
 func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11Encoder) error {
