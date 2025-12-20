@@ -11,6 +11,10 @@ var Version0 = bech32.Version0
 var VersionM = bech32.VersionM
 var VersionUnknown = bech32.VersionUnknown
 
+// ======================
+// === encoding stuff ===
+// ======================
+
 type Base32Encoder interface {
 	EncodeBase32() ([]byte, error)
 }
@@ -99,6 +103,62 @@ func Encode(hrp string, data []byte) (string, error) {
 	return bech32.Encode(hrp, data)
 }
 
+// BytesToBech32 converts a byte array to a bech32 string without the checksum
+// by mapping each byte to the corresponding character in the bech32 charset.
+func BytesToBech32Charset(data []byte) string {
+	charset := "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+	var s string
+	for _, b := range data {
+		s += string(charset[b])
+	}
+	return s
+}
+
+// ======================
+// === decoding stuff ===
+// ======================
+
+type Base32Decoder[T any] interface {
+	DecodeBase32() (T, error)
+}
+
+type BytesBase32Decoder struct {
+	data []byte
+}
+
+type UintBase32Decoder struct {
+	data []byte
+}
+
+var _ Base32Decoder[[]byte] = (*BytesBase32Decoder)(nil)
+var _ Base32Decoder[uint] = (*UintBase32Decoder)(nil)
+
+func NewBytesBase32Decoder(data []byte) BytesBase32Decoder {
+	return BytesBase32Decoder{data: data}
+}
+
+func NewUintBase32Decoder(data []byte) UintBase32Decoder {
+	return UintBase32Decoder{data: data}
+}
+
+// DecodeBase32 decodes the base32-encoded byte slice into a base256 byte slice.
+func (d BytesBase32Decoder) DecodeBase32() ([]byte, error) {
+	return bech32.ConvertBits(d.data, 5, 8, false)
+}
+
+// DecodeBase32 decodes the base32-encoded byte array in big-endian order into a
+// uint value.
+func (e UintBase32Decoder) DecodeBase32() (uint, error) {
+	num := uint(0)
+	for i, b := range e.data {
+		// big-endian order: first byte is the most significant byte, so we
+		// shift it the most
+		num |= uint(b) << (5 * (len(e.data) - i - 1))
+	}
+
+	return num, nil
+}
+
 // Decode decodes a bech32 encoded string, returning the human-readable part and
 // the data part excluding the checksum.
 func Decode(bech string) (string, []byte, error) {
@@ -111,18 +171,18 @@ func DecodeGeneric(bech string) (string, []byte, bech32.Version, error) {
 	return bech32.DecodeGeneric(bech)
 }
 
+// DecodeNoLimit decodes a bech32 encoded string, returning the human-readable
+// part and the data part excluding the checksum. It does not validate against
+// the BIP-173 maximum length allowed for bech32 strings.
+func DecodeNoLimit(bech string) (string, []byte, error) {
+	return bech32.DecodeNoLimit(bech)
+}
+
+// ===================
+// === other stuff ===
+// ===================
+
 // ConvertBits converts a byte array from one bit length to another.
 func ConvertBits(data []byte, fromBits, toBits uint8, pad bool) ([]byte, error) {
 	return bech32.ConvertBits(data, fromBits, toBits, pad)
-}
-
-// BytesToBech32 converts a byte array to a bech32 string without the checksum
-// by mapping each byte to the corresponding character in the bech32 charset.
-func BytesToBech32Charset(data []byte) string {
-	charset := "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
-	var s string
-	for _, b := range data {
-		s += string(charset[b])
-	}
-	return s
 }

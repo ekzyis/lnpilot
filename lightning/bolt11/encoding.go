@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"iter"
+	"regexp"
 	"slices"
+	"strconv"
+	"time"
 
 	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lib/bitcoin"
@@ -201,7 +205,7 @@ func (pr *PaymentRequest) encodeTaggedFields(buf *bytes.Buffer) error {
 	// pr.getTaggedFieldEncoder will then always return the next routing hint.
 	var stop func()
 	pr.routingHintNext, stop = iter.Pull(slices.Values(pr.RoutingHints))
-	defer stop()
+	defer func() { pr.routingHintNext = nil; stop() }()
 
 	for _, fieldType := range pr.taggedFields {
 		encoder, err := pr.getTaggedFieldEncoder(fieldType)
@@ -225,12 +229,12 @@ func (pr *PaymentRequest) getTaggedFieldEncoder(fieldType TaggedFieldType) (Bolt
 	switch fieldType {
 	case fieldTypeS:
 		if !pr.PaymentSecret.IsZero() {
-			return pr.PaymentSecret, nil
+			return &pr.PaymentSecret, nil
 		}
 		return nil, errFieldDataNotFound
 	case fieldTypeP:
 		if !pr.PaymentHash.IsZero() {
-			return pr.PaymentHash, nil
+			return &pr.PaymentHash, nil
 		}
 		return nil, errFieldDataNotFound
 	case fieldTypeD:
@@ -240,7 +244,7 @@ func (pr *PaymentRequest) getTaggedFieldEncoder(fieldType TaggedFieldType) (Bolt
 		return nil, errFieldDataNotFound
 	case fieldTypeH:
 		if !pr.DescriptionHash.IsZero() {
-			return pr.DescriptionHash, nil
+			return &pr.DescriptionHash, nil
 		}
 		return nil, errFieldDataNotFound
 	case fieldTypeX:
@@ -258,7 +262,7 @@ func (pr *PaymentRequest) getTaggedFieldEncoder(fieldType TaggedFieldType) (Bolt
 		}
 		return nil, errFieldDataNotFound
 	case fieldType9:
-		return pr.Features, nil
+		return &pr.Features, nil
 	case fieldTypeR:
 		hint, ok := pr.routingHintNext()
 		if !ok {
@@ -315,4 +319,257 @@ func encodeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, encoder Bol
 	}
 
 	return nil
+}
+
+// ======================
+// === decoding stuff ===
+// ======================
+
+// Bolt11Decoder is an interface that represents a decoder for a tagged field in
+// a bolt11 payment request.
+//
+// A Bolt11Decoder should be a member of a PaymentRequest struct, such that
+// calling DecodeBolt11 will set the field in the payment request.
+type Bolt11Decoder interface {
+	DecodeBolt11([]byte) error
+}
+
+type StringBolt11Decoder struct {
+	s *string
+}
+
+type TimeDurationBolt11Decoder struct {
+	duration *time.Duration
+}
+
+// TODO: it makes sense that a Bolt11Decoder does not need to implement
+// Base32Decoder, but does it then make sense that a Bolt11Encoder needs to
+// implement Base32Encoder?
+
+var _ Bolt11Decoder = (*StringBolt11Decoder)(nil)
+var _ Bolt11Decoder = (*TimeDurationBolt11Decoder)(nil)
+var _ Bolt11Decoder = (*lntypes.Hash)(nil)
+var _ Bolt11Decoder = (*bolt09.FeatureVector)(nil)
+
+func (d StringBolt11Decoder) DecodeBolt11(data []byte) error {
+	decoded, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
+	if err != nil {
+		return err
+	}
+	*d.s = string(decoded)
+	return nil
+}
+
+func (d TimeDurationBolt11Decoder) DecodeBolt11(data []byte) error {
+	duration, err := bech32.NewUintBase32Decoder(data).DecodeBase32()
+	if err != nil {
+		return err
+	}
+	*d.duration = time.Duration(duration) * time.Second
+	return nil
+}
+
+func NewStringBolt11Decoder(s *string) Bolt11Decoder {
+	return StringBolt11Decoder{s: s}
+}
+
+func NewTimeDurationBolt11Decoder(duration *time.Duration) Bolt11Decoder {
+	return TimeDurationBolt11Decoder{duration: duration}
+}
+
+// DecodePaymentRequest decodes the bech32-encoded payment request into a
+// PaymentRequest struct.
+func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
+	// TODO: verify checksum if DecodeNoLimit doesn't already do it
+
+	hrp, dataBase32, err := bech32.DecodeNoLimit(encoded)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode payment request: %w", err)
+	}
+
+	// the data part must be the same length as the bech32 string without the
+	// hrp, bech32 separator, and checksum
+	if len(dataBase32) != len(encoded)-len(hrp)-1-6 {
+		return nil, fmt.Errorf("unexpected length of decoded bech32 data part: expected %d, got %d", len(encoded)-len(hrp)-1-6, len(dataBase32))
+	}
+
+	pr := PaymentRequest{}
+
+	err = pr.decodeHumanReadablePart(hrp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode hrp: %w", err)
+	}
+
+	err = pr.decodeTimestamp(dataBase32[0:7])
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode timestamp: %w", err)
+	}
+
+	// 64 bytes R||S + 1 byte recovery id in base256
+	// => 64 * 8 / 5 = 104 bytes in base32
+	sigLengthBase32 := 104
+	tfBase32 := dataBase32[7 : len(dataBase32)-sigLengthBase32]
+	err = pr.decodeTaggedFields(tfBase32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode tagged fields: %w", err)
+	}
+
+	// TODO: verify signature
+
+	return &pr, nil
+}
+
+// decodeHumanReadablePart decodes the hrp and sets the network and millisats
+// amount in the payment request.
+func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
+	var (
+		network    lntypes.Network
+		amt        lntypes.Bitcoin
+		multiplier lntypes.Multiplier
+		err        error
+	)
+
+	re := regexp.MustCompile(`^(?P<prefix>[a-zA-Z]+)((?P<amount>\d.*)(?P<multiplier>[munp]))?$`)
+	matches := findNamedMatches(re, hrp)
+
+	for key, value := range matches {
+		switch key {
+		case "prefix":
+			network, err = lntypes.DecodeNetworkPrefix(value)
+			if err != nil {
+				return fmt.Errorf("failed to decode network prefix: %w", err)
+			}
+		case "amount":
+			numAmt, err := strconv.ParseUint(value, 10, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse amount: %w", err)
+			}
+			amt = lntypes.Bitcoin(numAmt)
+		case "multiplier":
+			multiplier = lntypes.Multiplier(value)
+		}
+	}
+
+	pr.Network = network
+
+	if amt == 0 {
+		return nil
+	}
+
+	var picoBitcoins uint64
+	switch multiplier {
+	case lntypes.MultiplierPico:
+		picoBitcoins = uint64(amt)
+	case lntypes.MultiplierNano:
+		picoBitcoins = uint64(amt) * 1e3
+	case lntypes.MultiplierMicro:
+		picoBitcoins = uint64(amt) * 1e6
+	case lntypes.MultiplierMilli:
+		picoBitcoins = uint64(amt) * 1e9
+	}
+	// see pr.humanReadablePart() for the conversion math
+	pr.Msats = lntypes.MilliSatoshi(picoBitcoins / 10)
+
+	return nil
+}
+
+// decodeTimestamp decodes the timestamp from the byte slice and sets it in the
+// payment request. The byte slice must be in base32, big-endian order and 7
+// bytes long.
+func (pr *PaymentRequest) decodeTimestamp(dataBase32 []byte) error {
+	if len(dataBase32) != 7 {
+		return fmt.Errorf("expected 7 bytes in big-endian order, got %d", len(dataBase32))
+	}
+
+	timestamp, err := bech32.NewUintBase32Decoder(dataBase32).DecodeBase32()
+	if err != nil {
+		return err
+	}
+
+	pr.Timestamp = time.Unix(int64(timestamp), 0)
+	return nil
+}
+
+// decodeTaggedFields decodes the tagged fields from the byte slice and sets
+// them in the payment request. The byte slice must be in base32.
+func (pr *PaymentRequest) decodeTaggedFields(dataBase32 []byte) error {
+	r := bytes.NewReader(dataBase32)
+
+	for {
+		fieldType, err := r.ReadByte()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("failed to read field type: %w", err)
+		}
+
+		tfDataLengthBase32 := make([]byte, 2)
+		_, err = r.Read(tfDataLengthBase32)
+		if err != nil {
+			return fmt.Errorf("failed to read data length of 0x%02x: %w", fieldType, err)
+		}
+
+		tfDataLength, err := bech32.NewUintBase32Decoder(tfDataLengthBase32).DecodeBase32()
+		if err != nil {
+			return fmt.Errorf("failed to decode data length of 0x%02x: %w", fieldType, err)
+		}
+
+		tfDataBase32 := make([]byte, tfDataLength)
+		_, err = r.Read(tfDataBase32)
+		if err != nil {
+			return fmt.Errorf("failed to read data of 0x%02x: %w", fieldType, err)
+		}
+
+		tfDecoder, err := pr.getTaggedFieldDecoder(fieldType)
+		if err != nil {
+			return fmt.Errorf("failed to get tagged field decoder for 0x%02x: %w", fieldType, err)
+		}
+
+		err = tfDecoder.DecodeBolt11(tfDataBase32)
+		if err != nil {
+			return fmt.Errorf("failed to decode data of 0x%02x: %w", fieldType, err)
+		}
+	}
+
+	return nil
+}
+
+// getTaggedFieldDecoder returns the Bolt11Decoder for the given field type and
+// data from the payment request. Calling .DecodeBolt11 on the returned decoder
+// will set the field in the payment request.
+func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt11Decoder, error) {
+	pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldType)
+
+	switch fieldType {
+	case fieldTypeP:
+		return &pr.PaymentHash, nil
+	case fieldTypeS:
+		return &pr.PaymentSecret, nil
+	case fieldTypeH:
+		return &pr.DescriptionHash, nil
+	case fieldTypeD:
+		return NewStringBolt11Decoder(&pr.Description), nil
+	case fieldType9:
+		return &pr.Features, nil
+	case fieldTypeX:
+		return NewTimeDurationBolt11Decoder(&pr.Expiry), nil
+	}
+
+	return nil, errUnknownFieldType
+}
+
+// findNamedMatches finds the named matches in the regex and returns a map of
+// the named matches to the values. If a named group wasn't found, the map does
+// not contain the key.
+func findNamedMatches(regex *regexp.Regexp, str string) map[string]string {
+	matches := regex.FindStringSubmatch(str)
+	results := map[string]string{}
+	for i, match := range matches {
+		if i == 0 || match == "" {
+			continue
+		}
+		results[regex.SubexpNames()[i]] = match
+	}
+	return results
 }

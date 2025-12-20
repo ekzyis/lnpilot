@@ -108,7 +108,10 @@ func WithDefaultExpiry() func(*PaymentRequest) {
 }
 
 func WithNoExpiry() func(*PaymentRequest) {
-	return WithExpiry(0)
+	return func(pr *PaymentRequest) {
+		WithExpiry(0)(pr)
+		pr.taggedFields = remove(pr.taggedFields, fieldTypeX)
+	}
 }
 
 func WithFallbackAddress(fallbackAddress string) func(*PaymentRequest) {
@@ -139,7 +142,10 @@ func WithDefaultMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
 }
 
 func WithNoMinFinalCLTVExpiryDelta() func(*PaymentRequest) {
-	return WithMinFinalCLTVExpiryDelta(0)
+	return func(pr *PaymentRequest) {
+		WithMinFinalCLTVExpiryDelta(0)(pr)
+		pr.taggedFields = remove(pr.taggedFields, fieldTypeC)
+	}
 }
 
 func WithPaymentMetadata(paymentMetadata []byte) func(*PaymentRequest) {

@@ -1,5 +1,7 @@
 package lntypes
 
+import "errors"
+
 type Network string
 
 const (
@@ -30,4 +32,18 @@ func (n Network) Prefix() NetworkPrefix {
 		return NetworkPrefixSignet
 	}
 	return NetworkPrefix("")
+}
+
+func DecodeNetworkPrefix(prefix string) (Network, error) {
+	switch prefix {
+	case string(NetworkPrefixMainnet):
+		return NetworkMainnet, nil
+	case string(NetworkPrefixTestnet):
+		return NetworkTestnet, nil
+	case string(NetworkPrefixRegtest):
+		return NetworkRegtest, nil
+	case string(NetworkPrefixSignet):
+		return NetworkSignet, nil
+	}
+	return Network(""), errors.New("unknown network prefix")
 }
