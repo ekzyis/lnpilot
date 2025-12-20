@@ -4,8 +4,8 @@ package bolt09
 // can be 5114. They are limited by the 10 bits for data_length in the tagged
 // fields of bolt11 payment requests.
 //
-// So instead, we use map[FeatureBit]struct{} to represent features,
-// inspired by LND's implementation.
+// So instead, we use map[FeatureBit]struct{} to represent features, inspired by
+// LND's implementation.
 //
 // I think bitmasks are really cool though :/
 
@@ -113,8 +113,8 @@ func (fv *FeatureVector) Bytes() []byte {
 	return b
 }
 
-// EncodeBase32 returns the bytes of the feature vector
-// in base32 encoding, big-endian order.
+// EncodeBase32 returns the bytes of the feature vector in base32 encoding,
+// big-endian order.
 func (fv FeatureVector) EncodeBase32() ([]byte, error) {
 	b := make([]byte, fv.maxBit/5+1)
 	for bit := range fv.features {

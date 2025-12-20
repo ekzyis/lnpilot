@@ -65,13 +65,13 @@ func (e UintBase32Encoder) EncodeBase32() ([]byte, error) {
 	}
 
 	numBase32 := make([]byte, base32Len)
-	// this fills the array from high to low indices,
-	// with the most significant bits ending up at the lowest index
-	// => big-endian order
+	// this fills the array from high to low indices, with the most significant
+	// bits ending up at the lowest index => big-endian order
 	for i := int(base32Len) - 1; i >= 0; i-- {
 		// store least significant 5 bits of num at the current index
 		numBase32[i] = byte(num & 0b11111)
-		// shift num right by 5 bits to process the next 5 bits of higher significance
+		// shift num right by 5 bits to process the next 5 bits of higher
+		// significance
 		num >>= 5
 	}
 
@@ -101,8 +101,8 @@ func Decode(bech string) (string, []byte, error) {
 	return bech32.Decode(bech)
 }
 
-// DecodeGeneric decodes a bech32 encoded string, returning the human-readable part,
-// the data part excluding the checksum, and the version.
+// DecodeGeneric decodes a bech32 encoded string, returning the human-readable
+// part, the data part excluding the checksum, and the version.
 func DecodeGeneric(bech string) (string, []byte, bech32.Version, error) {
 	return bech32.DecodeGeneric(bech)
 }

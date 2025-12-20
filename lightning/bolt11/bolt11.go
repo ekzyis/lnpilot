@@ -59,7 +59,8 @@ type PaymentRequest struct {
 type FeatureBit uint16
 
 const (
-	// this bit is marked as assumed in bolt09, but for some reason, there's a test vector with this bit set.
+	// this bit is marked as assumed in bolt09, but for some reason, there's a
+	// test vector with this bit set.
 	VarOnionOptinRequired FeatureBit = FeatureBit(bolt09.VarOnionOptinRequired)
 
 	PaymentSecretRequired FeatureBit = FeatureBit(bolt09.PaymentSecretRequired)
@@ -220,7 +221,8 @@ func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
 
 func WithFeatureBits(featureBits ...FeatureBit) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
-		// Go does not allow a direct cast between []FeatureBit and []bolt09.FeatureBit
+		// Go does not allow a direct cast between []FeatureBit and
+		// []bolt09.FeatureBit
 		bolt09Bits := make([]bolt09.FeatureBit, len(featureBits))
 		for i, bit := range featureBits {
 			bolt09Bits[i] = bolt09.FeatureBit(bit)
@@ -343,9 +345,9 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 	}
 
 	amt, multiplier, err := func() (lntypes.Bitcoin, lntypes.Multiplier, error) {
-		// Amounts are denominated in bitcoins, not millisatoshis.
-		// This means we first convert millisatoshis to picobitcoins,
-		// because that's the smallest unit we can represent with our multipliers.
+		// Amounts are denominated in bitcoins, not millisatoshis. This means we
+		// first convert millisatoshis to picobitcoins, because that's the
+		// smallest unit we can represent with our multipliers.
 		//
 		// The conversion math is as follows:
 		//
@@ -355,8 +357,8 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 		//
 		// => picobitcoins = msats * 1e12 / (1e3 * 1e8) = msats * 10
 		//
-		// This also makes sure that the last decimal is always a zero when 'pico'
-		// is used, since HTLCs are denonimated in millisatoshis.
+		// This also makes sure that the last decimal is always a zero when
+		// 'pico' is used, since HTLCs are denonimated in millisatoshis.
 		units := lntypes.PicoBitcoin(pr.Msats * 10)
 
 		var multiplier lntypes.Multiplier
@@ -368,8 +370,8 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 			}
 		}
 
-		// payment requests are denominated in bitcoins, and the multiplier
-		// is used to represent smaller units of bitcoin
+		// payment requests are denominated in bitcoins, and the multiplier is
+		// used to represent smaller units of bitcoin
 		return lntypes.Bitcoin(units), multiplier, nil
 	}()
 	if err != nil {
@@ -501,7 +503,8 @@ func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11E
 }
 
 func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp string) error {
-	// The signature is over the sha256 hash of hrp + data part encoded in base256.
+	// The signature is over the sha256 hash of hrp + data part encoded in
+	// base256.
 	bufBase256, err := bech32.ConvertBits(buf.Bytes(), 5, 8, true)
 	if err != nil {
 		return fmt.Errorf("failed to convert buffer to base256: %w", err)

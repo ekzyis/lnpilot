@@ -8,7 +8,7 @@ type CompactECDSASignature struct {
 }
 
 type Signer interface {
-	// CompactECDSASign returns a compact ECDSA signature over secp256k1.
-	// The message will be hashed using sha256 before signing.
+	// CompactECDSASign returns a compact ECDSA signature over secp256k1. The
+	// message will be hashed using sha256 before signing.
 	CompactECDSASign(msg []byte) (CompactECDSASignature, error)
 }

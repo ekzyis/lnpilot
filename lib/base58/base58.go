@@ -7,14 +7,14 @@ func Encode(data []byte) string {
 	return base58.Encode(data)
 }
 
-// Decode decodes a modified base58 string to a byte slice.
-// It does not verify the checksum.
+// Decode decodes a modified base58 string to a byte slice. It does not verify
+// the checksum.
 func Decode(data string) []byte {
 	return base58.Decode(data)
 }
 
-// DecodeAddress decodes a base58 address  and returns the
-// network ID and the ripemd160 hash of the pubkey or script.
+// DecodeAddress decodes a base58 address and returns the network ID and the
+// ripemd160 hash of the pubkey or script.
 func DecodeAddress(addr string) (byte, []byte) {
 	decoded := Decode(addr)
 	netID := decoded[0]

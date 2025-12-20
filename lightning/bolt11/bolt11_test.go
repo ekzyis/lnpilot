@@ -22,21 +22,22 @@ var (
 	paymentSecretBytes, _ = hex.DecodeString("1111111111111111111111111111111111111111111111111111111111111111")
 	paymentHashBytes, _   = hex.DecodeString("0001020304050607080900010203040506070809000102030405060708090102")
 
-	// this description is 200 bytes long, which isn't long enough to fall back to hashing,
-	// so we hash it ourselves to pass the test vectors
+	// this description is 200 bytes long, which isn't long enough to fall back
+	// to hashing, so we hash it ourselves to pass the test vectors
 	longDescription     = "One piece of chocolate cake, one icecream cone, one pickle, one slice of swiss cheese, one slice of salami, one lollypop, one piece of cherry pie, one sausage, one cupcake, and one slice of watermelon"
 	longDescriptionHash = sha256.Sum256([]byte(longDescription))
 )
 
-// TestSigner generates deterministic compact ECDSA signatures
-// over secp256k1 using RFC6979 and HMAC-SHA256.
+// TestSigner generates deterministic compact ECDSA signatures over secp256k1
+// using RFC6979 and HMAC-SHA256.
 type TestSigner struct{}
 
 func (s *TestSigner) CompactECDSASign(msg []byte) (secp256k1.CompactECDSASignature, error) {
 	privKey := _secp256k1.PrivKeyFromBytes(privKeyBytes)
 
 	hash := sha256.Sum256(msg)
-	// this will generate a deterministic compact ECDSA signature according to RFC 6979
+	// this will generate a deterministic compact ECDSA signature according to
+	// RFC 6979
 	sig := ecdsa.SignCompact(privKey, hash[:], true)
 
 	return secp256k1.CompactECDSASignature{
@@ -175,8 +176,8 @@ func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
 
 func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 	// Please make a donation of any amount using payment_hash
-	// 0001020304050607080900010203040506070809000102030405060708090102
-	// to me @03e7156ae33b0a208d0744199163177e909e80176e55d97a2f221ede0f934dd9ad
+	// 0001020304050607080900010203040506070809000102030405060708090102 to me
+	// @03e7156ae33b0a208d0744199163177e909e80176e55d97a2f221ede0f934dd9ad
 
 	assert := assert.New(t)
 
@@ -224,8 +225,8 @@ func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
-	// Please send 0.0025 BTC for a cup of nonsense (ナンセンス 1杯) to the same peer,
-	// within one minute
+	// Please send 0.0025 BTC for a cup of nonsense (ナンセンス 1杯) to the same
+	// peer, within one minute
 
 	assert := assert.New(t)
 
@@ -274,7 +275,8 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
-	// The same, on testnet, with a fallback address mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP
+	// The same, on testnet, with a fallback address
+	// mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP
 
 	assert := assert.New(t)
 
@@ -301,10 +303,10 @@ func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
-	// On mainnet, with fallback address 1RustyRX2oai4EYYDpQGWvEL62BBGqN9T
-	// with extra routing info to go via nodes
-	// 029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
-	// then 039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
+	// On mainnet, with fallback address 1RustyRX2oai4EYYDpQGWvEL62BBGqN9T with
+	// extra routing info to go via nodes
+	// 029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255 then
+	// 039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
 
 	assert := assert.New(t)
 
@@ -454,8 +456,8 @@ func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
-	// Please send 0.00967878534 BTC for a list of items
-	// within one week, amount in pico-BTC
+	// Please send 0.00967878534 BTC for a list of items within one week, amount
+	// in pico-BTC
 
 	assert := assert.New(t)
 
@@ -491,8 +493,8 @@ func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
 }
 
 func TestPaymentRequest_EncodeBech32_Spec_012(t *testing.T) {
-	// Please send $30 for coffee beans to the same peer,
-	// which supports features 8, 14 and 99, using secret
+	// Please send $30 for coffee beans to the same peer, which supports
+	// features 8, 14 and 99, using secret
 	// 0x1111111111111111111111111111111111111111111111111111111111111111
 
 	assert := assert.New(t)

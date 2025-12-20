@@ -9,7 +9,7 @@ import (
 	"github.com/ekzyis/lntutor/lib/bech32"
 )
 
-// RoutingHint is a list of hops that a node can use for pathfinding.
+// RoutingHint contains a list of hops that a node can use for pathfinding.
 type RoutingHint struct {
 	HopHints []*HopHint
 }

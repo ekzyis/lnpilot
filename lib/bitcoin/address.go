@@ -23,15 +23,15 @@ var Version0 = bech32.Version0
 var VersionM = bech32.VersionM
 
 type Address interface {
-	// Encode encodes the address into the appropriate format
-	// (bech32 for segwit, base58 for legacy).
+	// Encode encodes the address into the appropriate format (bech32 for
+	// segwit, base58 for legacy).
 	Encode() (string, error)
 
 	// EncodeBase32 encodes the address into a base32-encoded byte array.
 	EncodeBase32() ([]byte, error)
 
-	// EncodeBolt11 encodes the address into a base32-encoded byte array,
-	// and includes the version byte for the address type.
+	// EncodeBolt11 encodes the address into a base32-encoded byte array, and
+	// includes the version byte for the address type.
 	EncodeBolt11() ([]byte, error)
 }
 
@@ -141,8 +141,8 @@ func DecodeAddress(addr string) (Address, error) {
 
 	a, err := DecodeLegacyAddress(addr)
 	if err == ErrInvalidLegacyAddress {
-		// we don't wrap the error because we don't want to assume
-		// it's a legacy address if we failed to decode it as such.
+		// we don't wrap the error because we don't want to assume it's a legacy
+		// address if we failed to decode it as such.
 		return nil, fmt.Errorf("failed to decode address: %s", addr)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to decode address: %w", err)
@@ -184,9 +184,9 @@ func DecodeSegwitAddress(addr string) (*SegwitAddress, error) {
 		return nil, ErrInvalidWitnessVersion
 	}
 
-	// The remaining characters of the address returned are grouped into
-	// words of 5 bits. In order to restore the original witness program
-	// bytes, we'll need to regroup into 8 bit words.
+	// The remaining characters of the address returned are grouped into words
+	// of 5 bits. In order to restore the original witness program bytes, we'll
+	// need to regroup into 8 bit words.
 	base256, err := bech32.ConvertBits(data[1:], 5, 8, false)
 	if err != nil {
 		return nil, err
