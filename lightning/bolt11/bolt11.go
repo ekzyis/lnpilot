@@ -165,8 +165,6 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 		}
 	}
 
-	// TODO: write remaining tagged fields
-
 	return nil
 }
 
