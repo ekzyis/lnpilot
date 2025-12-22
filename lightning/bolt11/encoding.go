@@ -18,6 +18,13 @@ var (
 	errUnknownFieldType  = errors.New("unknown field type")
 )
 
+// Bolt11Encoder is an interface that represents an encoder for a tagged field
+// in a bolt11 payment request.
+//
+// Most encoders simply encode the data into base32-encoded bytes, in which case
+// EncodeBolt11 simply calls EncodeBase32. But some (like fallback addresses)
+// have additional encoding requirements, in which case EncodeBolt11 will
+// include the additional encoding.
 type Bolt11Encoder interface {
 	EncodeBase32() ([]byte, error)
 	EncodeBolt11() ([]byte, error)
