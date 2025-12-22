@@ -56,7 +56,7 @@ func (e BytesBase32Encoder) EncodeBase32() ([]byte, error) {
 	return bech32.ConvertBits(e.data, 8, 5, true)
 }
 
-// EncodeBase32 converts the uint value to a base32-encoded byte array in
+// EncodeBase32 converts the uint value to a base32-encoded byte slice in
 // big-endian order. It includes zero padding to match the bit length.
 func (e UintBase32Encoder) EncodeBase32() ([]byte, error) {
 	num := e.num
@@ -87,7 +87,7 @@ func (e UintBase32Encoder) EncodeBase32() ([]byte, error) {
 }
 
 // EncodeBase32 converts the uint value to a variable-length base32-encoded byte
-// array in big-endian order.
+// slice in big-endian order.
 func (e VarUintBase32Encoder) EncodeBase32() ([]byte, error) {
 	num := e.num
 	var numBase32 []byte
@@ -103,7 +103,7 @@ func Encode(hrp string, data []byte) (string, error) {
 	return bech32.Encode(hrp, data)
 }
 
-// BytesToBech32 converts a byte array to a bech32 string without the checksum
+// BytesToBech32 converts a byte slice to a bech32 string without the checksum
 // by mapping each byte to the corresponding character in the bech32 charset.
 func BytesToBech32Charset(data []byte) string {
 	charset := "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
@@ -146,7 +146,7 @@ func (d BytesBase32Decoder) DecodeBase32() ([]byte, error) {
 	return bech32.ConvertBits(d.data, 5, 8, false)
 }
 
-// DecodeBase32 decodes the base32-encoded byte array in big-endian order into a
+// DecodeBase32 decodes the base32-encoded byte slice in big-endian order into a
 // uint value.
 func (e UintBase32Decoder) DecodeBase32() (uint, error) {
 	num := uint(0)
@@ -182,7 +182,7 @@ func DecodeNoLimit(bech string) (string, []byte, error) {
 // === other stuff ===
 // ===================
 
-// ConvertBits converts a byte array from one bit length to another.
+// ConvertBits converts a byte slice from one bit length to another.
 func ConvertBits(data []byte, fromBits, toBits uint8, pad bool) ([]byte, error) {
 	return bech32.ConvertBits(data, fromBits, toBits, pad)
 }

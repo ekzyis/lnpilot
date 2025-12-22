@@ -26,10 +26,10 @@ type Address interface {
 	// segwit, base58 for legacy).
 	Encode() (string, error)
 
-	// EncodeBase32 encodes the address into a base32-encoded byte array.
+	// EncodeBase32 encodes the address into a base32-encoded byte slice.
 	EncodeBase32() ([]byte, error)
 
-	// EncodeBolt11 encodes the address into a base32-encoded byte array, and
+	// EncodeBolt11 encodes the address into a base32-encoded byte slice, and
 	// includes the version byte for the address type.
 	EncodeBolt11() ([]byte, error)
 }
