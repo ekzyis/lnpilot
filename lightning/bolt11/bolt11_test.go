@@ -57,7 +57,7 @@ func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
 	// check hrp
 	assert.Equalf(lntypes.NetworkMainnet, pr.Network, "network should be mainnet")
 	assert.Equalf(lntypes.MilliSatoshi(1_000), pr.Msats, "amount should be 1 sat")
-	hrp, err := pr.humanReadablePart()
+	hrp, err := pr.encodeHRP()
 	if !assert.NoError(err) {
 		return
 	}

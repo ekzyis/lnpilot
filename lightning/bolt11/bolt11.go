@@ -74,12 +74,12 @@ func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) 
 	}
 	buf.Write(timestampBase32)
 
-	err = pr.writeTaggedFields(&buf)
+	err = pr.encodeTaggedFields(&buf)
 	if err != nil {
 		return "", fmt.Errorf("failed to write tagged fields: %w", err)
 	}
 
-	hrp, err := pr.humanReadablePart()
+	hrp, err := pr.encodeHRP()
 	if err != nil {
 		return "", err
 	}
@@ -96,8 +96,9 @@ func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) 
 	return encoded, nil
 }
 
-// The human-readable part contains the network prefix and the amount
-func (pr *PaymentRequest) humanReadablePart() (string, error) {
+// encodeHRP encodes the human-readable part of the payment request, which
+// contains the network prefix and the amount.
+func (pr *PaymentRequest) encodeHRP() (string, error) {
 	prefix, err := func() (lntypes.NetworkPrefix, error) {
 		return pr.Network.Prefix(), nil
 	}()
@@ -146,20 +147,24 @@ func (pr *PaymentRequest) humanReadablePart() (string, error) {
 	return fmt.Sprintf("%s%d%s", prefix, amt, multiplier), nil
 }
 
-func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
+// encodeTaggedFields writes the encoded tagged fields to the buffer. Every
+// tagged field is encoded using the Bolt11Encoder interface.
+func (pr *PaymentRequest) encodeTaggedFields(buf *bytes.Buffer) error {
+	// There can be multiple routing hints, so we initialize the iterator here.
+	// pr.getTaggedFieldEncoder will then always return the next routing hint.
 	var stop func()
 	pr.routingHintNext, stop = iter.Pull(slices.Values(pr.RoutingHints))
 	defer stop()
 
 	for _, fieldType := range pr.taggedFields {
-		data, err := pr.getTaggedFieldData(fieldType)
+		encoder, err := pr.getTaggedFieldEncoder(fieldType)
 		if err == errFieldDataNotFound {
 			continue
 		}
 		if err != nil {
 			return fmt.Errorf("failed to get tagged field data: 0x%02x: %w", fieldType, err)
 		}
-		err = writeTaggedField(buf, fieldType, data)
+		err = encodeTaggedField(buf, fieldType, encoder)
 		if err != nil {
 			return fmt.Errorf("failed to write tagged field: 0x%02x: %w", fieldType, err)
 		}
@@ -168,7 +173,8 @@ func (pr *PaymentRequest) writeTaggedFields(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (pr *PaymentRequest) getTaggedFieldData(fieldType TaggedFieldType) (Bolt11Encoder, error) {
+// getTaggedFieldEncoder returns the Bolt11Encoder for the given field type.
+func (pr *PaymentRequest) getTaggedFieldEncoder(fieldType TaggedFieldType) (Bolt11Encoder, error) {
 	switch fieldType {
 	case fieldTypeS:
 		if !pr.PaymentSecret.IsZero() {
@@ -226,10 +232,12 @@ func (pr *PaymentRequest) getTaggedFieldData(fieldType TaggedFieldType) (Bolt11E
 	return nil, errUnknownFieldType
 }
 
-func writeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, data Bolt11Encoder) error {
+// encodeTaggedFields writes the encoded data returned by encoder to the buffer.
+// The field type is used to verify the data length for fields with a fixed data length.
+func encodeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, encoder Bolt11Encoder) error {
 	buf.WriteByte(fieldType)
 
-	dataBolt11, err := data.EncodeBolt11()
+	dataBolt11, err := encoder.EncodeBolt11()
 	if err != nil {
 		return err
 	}
