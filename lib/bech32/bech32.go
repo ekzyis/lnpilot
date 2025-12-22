@@ -28,6 +28,10 @@ type VarUintBase32Encoder struct {
 	num uint
 }
 
+var _ Base32Encoder = (*BytesBase32Encoder)(nil)
+var _ Base32Encoder = (*UintBase32Encoder)(nil)
+var _ Base32Encoder = (*VarUintBase32Encoder)(nil)
+
 func NewBytesBase32Encoder(data []byte) BytesBase32Encoder {
 	return BytesBase32Encoder{data: data}
 }

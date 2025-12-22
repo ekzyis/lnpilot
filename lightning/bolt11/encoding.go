@@ -10,6 +10,7 @@ import (
 	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lib/bitcoin"
 	"github.com/ekzyis/lntutor/lib/secp256k1"
+	"github.com/ekzyis/lntutor/lightning/bolt09"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 )
 
@@ -30,9 +31,6 @@ type Bolt11Encoder interface {
 	EncodeBolt11() ([]byte, error)
 }
 
-// Every Bolt11Encoder must also implement bech32.Base32Encoder
-var _ bech32.Base32Encoder = (Bolt11Encoder)(nil)
-
 type BytesBolt11Encoder struct {
 	*bech32.BytesBase32Encoder
 }
@@ -48,6 +46,20 @@ type VarUintBolt11Encoder struct {
 type UintBolt11Encoder struct {
 	*bech32.UintBase32Encoder
 }
+
+// Every Bolt11Encoder must also implement bech32.Base32Encoder
+var _ bech32.Base32Encoder = (Bolt11Encoder)(nil)
+
+// Every Bitcoin address must also implement Bolt11Encoder
+var _ Bolt11Encoder = (bitcoin.Address)(nil)
+
+var _ Bolt11Encoder = (*BytesBolt11Encoder)(nil)
+var _ Bolt11Encoder = (*StringBolt11Encoder)(nil)
+var _ Bolt11Encoder = (*VarUintBolt11Encoder)(nil)
+var _ Bolt11Encoder = (*UintBolt11Encoder)(nil)
+var _ Bolt11Encoder = (*bolt09.FeatureVector)(nil)
+var _ Bolt11Encoder = (*lntypes.Hash)(nil)
+var _ Bolt11Encoder = (*lntypes.RoutingHint)(nil)
 
 func (e BytesBolt11Encoder) EncodeBolt11() ([]byte, error) {
 	return e.EncodeBase32()

@@ -52,6 +52,11 @@ type P2SHAddress struct {
 	ScriptHash []byte
 }
 
+var _ Address = (*SegwitAddress)(nil)
+var _ Address = (*P2PKAddress)(nil)
+var _ Address = (*P2PKHAddress)(nil)
+var _ Address = (*P2SHAddress)(nil)
+
 func (a *SegwitAddress) Encode() (string, error) {
 	// TODO: implement
 	return "", liberr.ErrNotImplemented
