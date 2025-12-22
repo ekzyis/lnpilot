@@ -103,6 +103,11 @@ func Encode(hrp string, data []byte) (string, error) {
 	return bech32.Encode(hrp, data)
 }
 
+// EncodeM encodes base32-encoded data into a bech32m string.
+func EncodeM(hrp string, data []byte) (string, error) {
+	return bech32.EncodeM(hrp, data)
+}
+
 // BytesToBech32 converts a byte slice to a bech32 string without the checksum
 // by mapping each byte to the corresponding character in the bech32 charset.
 func BytesToBech32Charset(data []byte) string {

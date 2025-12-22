@@ -1,9 +1,15 @@
 package base58
 
-import "github.com/btcsuite/btcd/btcutil/base58"
+import (
+	"crypto/sha256"
 
-// Encode encodes a byte slice to a modified base58 string.
+	"github.com/btcsuite/btcd/btcutil/base58"
+)
+
+// Encode encodes a byte slice to a modified base58 string. The checksum is
+// appended to the data.
 func Encode(data []byte) string {
+	data = append(data, checksum(data)...)
 	return base58.Encode(data)
 }
 
@@ -22,4 +28,10 @@ func DecodeAddress(addr string) (byte, []byte) {
 	// TODO: verify checksum?
 	// checkSum := decoded[len(decoded)-4:]
 	return netID, hash160
+}
+
+func checksum(data []byte) []byte {
+	h := sha256.Sum256(data)
+	h = sha256.Sum256(h[:])
+	return h[:4]
 }

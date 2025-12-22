@@ -289,8 +289,6 @@ func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 	// The same, on testnet, with a fallback address
 	// mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP
 
-	t.Skip("decoding fallback addresses not supported yet")
-
 	assert := assert.New(t)
 
 	expected := "lntb20m1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygshp58yjmdan79s6qqdhdzgynm4zwqd5d7xmw5fk98klysy043l2ahrqspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqfpp3x9et2e20v6pu37c5d9vax37wxq72un989qrsgqdj545axuxtnfemtpwkc45hx9d2ft7x04mt8q7y6t0k2dge9e7h8kpy9p34ytyslj3yu569aalz2xdk8xkd7ltxqld94u8h2esmsmacgpghe9k8"
@@ -324,7 +322,6 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 	// 039e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255
 
 	t.Skip("decoding routing hints not supported yet")
-	t.Skip("decoding fallback addresses not supported yet")
 
 	assert := assert.New(t)
 
@@ -371,8 +368,6 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 	// On mainnet, with fallback (P2SH) address
 	// 3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX
 
-	t.Skip("decoding fallback addresses not supported yet")
-
 	assert := assert.New(t)
 
 	expected := "lnbc20m1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygshp58yjmdan79s6qqdhdzgynm4zwqd5d7xmw5fk98klysy043l2ahrqspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqfppj3a24vwu6r8ejrss3axul8rxldph2q7z99qrsgqz6qsgww34xlatfj6e3sngrwfy3ytkt29d2qttr8qz2mnedfqysuqypgqex4haa2h8fx3wnypranf3pdwyluftwe680jjcfp438u82xqphf75ym"
@@ -401,8 +396,6 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
 	// On mainnet, with fallback (P2WPKH) address
 	// bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
-
-	t.Skip("decoding fallback addresses not supported yet")
 
 	assert := assert.New(t)
 
@@ -433,8 +426,6 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 	// On mainnet, with fallback (P2WSH) address
 	// bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3
 
-	t.Skip("decoding fallback addresses not supported yet")
-
 	assert := assert.New(t)
 
 	expected := "lnbc20m1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygshp58yjmdan79s6qqdhdzgynm4zwqd5d7xmw5fk98klysy043l2ahrqspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqfp4qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q9qrsgq9vlvyj8cqvq6ggvpwd53jncp9nwc47xlrsnenq2zp70fq83qlgesn4u3uyf4tesfkkwwfg3qs54qe426hp3tz7z6sweqdjg05axsrjqp9yrrwc"
@@ -463,8 +454,6 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 	// On mainnet, with fallback (P2TR) address
 	// bc1pptdvg0d2nj99568qn6ssdy4cygnwuxgw2ukmnwgwz7jpqjz2kszse2s3lm
-
-	t.Skip("decoding fallback addresses not supported yet")
 
 	assert := assert.New(t)
 

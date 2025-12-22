@@ -340,6 +340,7 @@ type TimeDurationBolt11Decoder struct {
 
 var _ Bolt11Decoder = (*StringBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*TimeDurationBolt11Decoder)(nil)
+var _ Bolt11Decoder = (*bitcoin.AddressBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*lntypes.Hash)(nil)
 var _ Bolt11Decoder = (*bolt09.FeatureVector)(nil)
 
@@ -546,6 +547,8 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 		return &pr.Features, nil
 	case fieldTypeX:
 		return NewTimeDurationBolt11Decoder(&pr.Expiry), nil
+	case fieldTypeF:
+		return bitcoin.NewAddressBolt11Decoder(&pr.FallbackAddress, pr.Network), nil
 	}
 
 	return nil, errUnknownFieldType

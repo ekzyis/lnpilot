@@ -21,10 +21,39 @@ var errInvalidWitnessVersion = errors.New("invalid witness version")
 var Version0 = bech32.Version0
 var VersionM = bech32.VersionM
 
+const (
+	segwitMainnetHRP = "bc"
+	segwitTestnetHRP = "tb"
+	segwitRegtestHRP = "bcrt"
+
+	p2pkhBolt11Version  = 0x11
+	p2pkhMainnetVersion = 0x00 // starts with 1
+	p2pkhTestnetVersion = 0x6f // starts with m or n (same for regtest)
+	p2pkhSignetVersion  = 0x3f // starts with S
+
+	p2shBolt11Version  = 0x12
+	p2shMainnetVersion = 0x05 // starts with 3
+	p2shTestnetVersion = 0xc4 // starts with 2 (same for regtest)
+	p2shSignetVersion  = 0x7b // starts with s
+)
+
 type Address interface {
+	// Encode encodes the address into a base58 string for legacy addresses, a
+	// bech32 string for segwit addresses with witness version 0, or a bech32m
+	// string for segwit addresses with witness version 1.
+	Encode() (string, error)
+
 	// EncodeBolt11 encodes the address into a base32-encoded byte slice, and
 	// includes the version byte for the address type.
 	EncodeBolt11() ([]byte, error)
+
+	// DecodeBolt11 decodes the address from a base32-encoded byte slice.
+	DecodeBolt11([]byte) error
+}
+
+type AddressBolt11Decoder struct {
+	addr    *string
+	network lntypes.Network
 }
 
 type SegwitAddress struct {
@@ -38,10 +67,12 @@ type P2PKAddress struct {
 }
 
 type P2PKHAddress struct {
+	Network    lntypes.Network
 	PubKeyHash []byte
 }
 
 type P2SHAddress struct {
+	Network    lntypes.Network
 	ScriptHash []byte
 }
 
@@ -50,17 +81,92 @@ var _ Address = (*P2PKAddress)(nil)
 var _ Address = (*P2PKHAddress)(nil)
 var _ Address = (*P2SHAddress)(nil)
 
+func NewAddressBolt11Decoder(addr *string, network lntypes.Network) AddressBolt11Decoder {
+	return AddressBolt11Decoder{addr: addr, network: network}
+}
+
+func (d AddressBolt11Decoder) DecodeBolt11(data []byte) error {
+	var a Address
+
+	version := data[0]
+	switch version {
+	case p2pkhBolt11Version:
+		a = &P2PKHAddress{Network: d.network}
+	case p2shBolt11Version:
+		a = &P2SHAddress{Network: d.network}
+	default:
+		a = &SegwitAddress{Network: d.network}
+	}
+
+	err := a.DecodeBolt11(data)
+	if err != nil {
+		return fmt.Errorf("failed to decode address: %w", err)
+	}
+
+	*d.addr, err = a.Encode()
+	if err != nil {
+		return fmt.Errorf("failed to encode address: %w", err)
+	}
+
+	return nil
+}
+
 func (a *SegwitAddress) Encode() (string, error) {
-	// TODO: implement
-	return "", liberr.ErrNotImplemented
+	var hrp string
+	switch a.Network {
+	case lntypes.NetworkMainnet:
+		hrp = segwitMainnetHRP
+	case lntypes.NetworkTestnet:
+		hrp = segwitTestnetHRP
+	case lntypes.NetworkRegtest:
+		hrp = segwitRegtestHRP
+	default:
+		return "", fmt.Errorf("invalid network: %s", a.Network)
+	}
+
+	progBase32, err := bech32.NewBytesBase32Encoder(a.Program).EncodeBase32()
+	if err != nil {
+		return "", fmt.Errorf("failed to encode witness program: %w", err)
+	}
+
+	data := append([]byte{a.Version}, progBase32...)
+
+	switch a.Version {
+	case 0:
+		return bech32.Encode(hrp, data)
+	case 1:
+		return bech32.EncodeM(hrp, data)
+	default:
+		return "", fmt.Errorf("invalid witness version: %d", a.Version)
+	}
 }
 
 func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
-	base32Bytes, err := bech32.ConvertBits(a.Program, 8, 5, true)
+	progBase32, err := bech32.NewBytesBase32Encoder(a.Program).EncodeBase32()
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert witness program to base32: %w", err)
+		return nil, fmt.Errorf("failed to encode witness program: %w", err)
 	}
-	return append([]byte{a.Version}, base32Bytes...), nil
+	return append([]byte{a.Version}, progBase32...), nil
+}
+
+func (a *SegwitAddress) DecodeBolt11(data []byte) error {
+	if len(data) < 1 {
+		return errNoWitnessVersion
+	}
+
+	version, progBase32 := data[0], data[1:]
+	if version > 16 {
+		return errInvalidWitnessVersion
+	}
+	a.Version = version
+
+	progBase256, err := bech32.NewBytesBase32Decoder(progBase32).DecodeBase32()
+	if err != nil {
+		return fmt.Errorf("failed to decode witness program: %w", err)
+	}
+	a.Program = progBase256
+
+	return nil
 }
 
 func (a *P2PKAddress) Encode() (string, error) {
@@ -73,32 +179,107 @@ func (a *P2PKAddress) EncodeBolt11() ([]byte, error) {
 	return nil, liberr.ErrNotImplemented
 }
 
-func (a *P2PKHAddress) Encode() (string, error) {
+func (a *P2PKAddress) DecodeBolt11(data []byte) error {
 	// TODO: implement
-	return "", liberr.ErrNotImplemented
+	return liberr.ErrNotImplemented
+}
+
+func (a *P2PKHAddress) Encode() (string, error) {
+	var version byte
+	switch a.Network {
+	case lntypes.NetworkMainnet:
+		version = p2pkhMainnetVersion
+	case lntypes.NetworkTestnet:
+		version = p2pkhTestnetVersion
+	case lntypes.NetworkSignet:
+		version = p2pkhSignetVersion
+	default:
+		return "", fmt.Errorf("invalid network: %s", a.Network)
+	}
+	data := append([]byte{version}, a.PubKeyHash...)
+	return base58.Encode(data), nil
 }
 
 func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
-	base32Bytes, err := bech32.ConvertBits(a.PubKeyHash, 8, 5, true)
+	pubKeyHashBase32, err := bech32.NewBytesBase32Encoder(a.PubKeyHash).EncodeBase32()
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert pubkey hash to base32: %w", err)
+		return nil, fmt.Errorf("failed to encode pubkey hash: %w", err)
 	}
-	// 0x11 is the version byte for P2PKH addresses in bolt11 (17 in base10)
-	return append([]byte{0x11}, base32Bytes...), nil
+	return append([]byte{p2pkhBolt11Version}, pubKeyHashBase32...), nil
+}
+
+func (a *P2PKHAddress) DecodeBolt11(data []byte) error {
+	if len(data) < 1 {
+		return fmt.Errorf("invalid data length for P2PKH address: %d", len(data))
+	}
+
+	version, pubKeyHashBase32 := data[0], data[1:]
+
+	if version != p2pkhBolt11Version {
+		return fmt.Errorf("invalid version byte for P2PKH address: expected %d, got 0x%02x", p2pkhBolt11Version, version)
+	}
+
+	PubKeyHashBase256, err := bech32.NewBytesBase32Decoder(pubKeyHashBase32).DecodeBase32()
+	if err != nil {
+		return fmt.Errorf("failed to decode P2PKH address: %w", err)
+	}
+	a.PubKeyHash = PubKeyHashBase256
+
+	if len(a.PubKeyHash) != ripemd160.Size {
+		return fmt.Errorf("invalid data length for P2PKH address: expected %d, got %d", ripemd160.Size, len(a.PubKeyHash))
+	}
+
+	return nil
 }
 
 func (a *P2SHAddress) Encode() (string, error) {
-	// TODO: implement
-	return "", liberr.ErrNotImplemented
+	var version byte
+	switch a.Network {
+	case lntypes.NetworkMainnet:
+		version = p2shMainnetVersion
+	case lntypes.NetworkTestnet:
+		version = p2shTestnetVersion
+	case lntypes.NetworkSignet:
+		version = p2shSignetVersion
+	default:
+		return "", fmt.Errorf("invalid network: %s", a.Network)
+	}
+	data := append([]byte{version}, a.ScriptHash...)
+	return base58.Encode(data), nil
 }
 
 func (a *P2SHAddress) EncodeBolt11() ([]byte, error) {
-	base32Bytes, err := bech32.ConvertBits(a.ScriptHash, 8, 5, true)
+	scriptHashBase32, err := bech32.NewBytesBase32Encoder(a.ScriptHash).EncodeBase32()
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert script hash to base32: %w", err)
+		return nil, fmt.Errorf("failed to encode script hash: %w", err)
 	}
-	// 0x12 is the version byte for P2SH addresses in bolt11 (18 in base10)
-	return append([]byte{0x12}, base32Bytes...), nil
+	return append([]byte{p2shBolt11Version}, scriptHashBase32...), nil
+}
+
+// DecodeBolt11 decodes a P2SH address from the tagged field data of a bolt11
+// payment request. The byte slice must be in base32.
+func (a *P2SHAddress) DecodeBolt11(data []byte) error {
+	if len(data) < 1 {
+		return fmt.Errorf("invalid data length for P2SH address: %d", len(data))
+	}
+
+	version, scriptHashBase32 := data[0], data[1:]
+
+	if version != p2shBolt11Version {
+		return fmt.Errorf("invalid version byte for P2SH address: expected %d, got 0x%02x", p2shBolt11Version, version)
+	}
+
+	scriptHashBase256, err := bech32.NewBytesBase32Decoder(scriptHashBase32).DecodeBase32()
+	if err != nil {
+		return fmt.Errorf("failed to decode P2SH address: %w", err)
+	}
+	a.ScriptHash = scriptHashBase256
+
+	if len(a.ScriptHash) != ripemd160.Size {
+		return fmt.Errorf("invalid data length for P2SH address: expected %d, got %d", ripemd160.Size, len(a.ScriptHash))
+	}
+
+	return nil
 }
 
 // DecodeAddress decodes a base58 (legacy) or bech32 (segwit) address.
@@ -120,7 +301,12 @@ func DecodeAddress(addr string) (Address, error) {
 }
 
 func isSegwitAddress(addr string) bool {
-	return strings.HasPrefix(addr, "bc1") || strings.HasPrefix(addr, "tb1")
+	for _, hrp := range []string{segwitMainnetHRP, segwitTestnetHRP, segwitRegtestHRP} {
+		if strings.HasPrefix(addr, hrp+"1") {
+			return true
+		}
+	}
+	return false
 }
 
 // decodeSegwitAddress decodes a segwit address - duh!
@@ -132,12 +318,17 @@ func decodeSegwitAddress(addr string) (*SegwitAddress, error) {
 
 	var network lntypes.Network
 	switch hrp {
-	case "bc":
+	case segwitMainnetHRP:
 		network = lntypes.NetworkMainnet
-	case "tb":
+	case segwitTestnetHRP:
 		network = lntypes.NetworkTestnet
+	case segwitRegtestHRP:
+		network = lntypes.NetworkRegtest
 	default:
-		return nil, fmt.Errorf("invalid network: %s", hrp)
+		return nil, fmt.Errorf(
+			"invalid hrp: expected %s, %s or %s, got %s",
+			segwitMainnetHRP, segwitTestnetHRP, segwitRegtestHRP, hrp,
+		)
 	}
 
 	// The first byte of the decoded address is the witness version, it must
@@ -147,7 +338,7 @@ func decodeSegwitAddress(addr string) (*SegwitAddress, error) {
 	}
 
 	// ...and be <= 16.
-	version := data[0]
+	version, progBase32 := data[0], data[1:]
 	if version > 16 {
 		return nil, errInvalidWitnessVersion
 	}
@@ -155,19 +346,19 @@ func decodeSegwitAddress(addr string) (*SegwitAddress, error) {
 	// The remaining characters of the address returned are grouped into words
 	// of 5 bits. In order to restore the original witness program bytes, we'll
 	// need to regroup into 8 bit words.
-	base256, err := bech32.ConvertBits(data[1:], 5, 8, false)
+	progBase256, err := bech32.ConvertBits(progBase32, 5, 8, false)
 	if err != nil {
 		return nil, err
 	}
 
 	// The regrouped data must be between 2 and 40 bytes.
-	if len(base256) < 2 || len(base256) > 40 {
+	if len(progBase256) < 2 || len(progBase256) > 40 {
 		return nil, fmt.Errorf("invalid data length")
 	}
 
 	// For witness version 0, address MUST be exactly 20 or 32 bytes.
-	if version == 0 && len(base256) != 20 && len(base256) != 32 {
-		return nil, fmt.Errorf("invalid data length for witness version 0: %v", len(base256))
+	if version == 0 && len(progBase256) != 20 && len(progBase256) != 32 {
+		return nil, fmt.Errorf("invalid data length for witness version 0: %v", len(progBase256))
 	}
 
 	// For witness version 0, the bech32 encoding must be used.
@@ -183,7 +374,7 @@ func decodeSegwitAddress(addr string) (*SegwitAddress, error) {
 	return &SegwitAddress{
 		Network: network,
 		Version: version,
-		Program: base256,
+		Program: progBase256,
 	}, nil
 }
 
@@ -210,15 +401,27 @@ func decodeLegacyAddress(addr string) (Address, error) {
 
 	netID, hash160 := base58.DecodeAddress(addr)
 
-	switch len(hash160) {
-	case ripemd160.Size:
-		// check first byte to determine type but it depends on the network
-		switch netID {
-		case 0x00, 0x6f, 0x3f:
-			return &P2PKHAddress{PubKeyHash: hash160}, nil
-		case 0x05, 0xc4, 0x7b:
-			return &P2SHAddress{ScriptHash: hash160}, nil
-		}
+	if len(hash160) != ripemd160.Size {
+		return nil, errInvalidLegacyAddress
 	}
-	return nil, errInvalidLegacyAddress
+
+	var network lntypes.Network
+	switch netID {
+	case p2pkhMainnetVersion, p2shMainnetVersion:
+		network = lntypes.NetworkMainnet
+	case p2pkhTestnetVersion, p2shTestnetVersion:
+		// could also be regtest since testnet magic bytes are the same
+		network = lntypes.NetworkTestnet
+	case p2pkhSignetVersion, p2shSignetVersion:
+		network = lntypes.NetworkSignet
+	}
+
+	switch netID {
+	case p2pkhMainnetVersion, p2pkhTestnetVersion, p2pkhSignetVersion:
+		return &P2PKHAddress{Network: network, PubKeyHash: hash160}, nil
+	case p2shMainnetVersion, p2shTestnetVersion, p2shSignetVersion:
+		return &P2SHAddress{Network: network, ScriptHash: hash160}, nil
+	default:
+		return nil, errInvalidLegacyAddress
+	}
 }
