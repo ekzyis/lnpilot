@@ -104,10 +104,10 @@ func (a *P2SHAddress) EncodeBolt11() ([]byte, error) {
 // DecodeAddress decodes a base58 (legacy) or bech32 (segwit) address.
 func DecodeAddress(addr string) (Address, error) {
 	if isSegwitAddress(addr) {
-		return DecodeSegwitAddress(addr)
+		return decodeSegwitAddress(addr)
 	}
 
-	a, err := DecodeLegacyAddress(addr)
+	a, err := decodeLegacyAddress(addr)
 	if err == errInvalidLegacyAddress {
 		// we don't wrap the error because we don't want to assume it's a legacy
 		// address if we failed to decode it as such.
@@ -123,8 +123,8 @@ func isSegwitAddress(addr string) bool {
 	return strings.HasPrefix(addr, "bc1") || strings.HasPrefix(addr, "tb1")
 }
 
-// DecodeSegwitAddress decodes a segwit address - duh!
-func DecodeSegwitAddress(addr string) (*SegwitAddress, error) {
+// decodeSegwitAddress decodes a segwit address - duh!
+func decodeSegwitAddress(addr string) (*SegwitAddress, error) {
 	hrp, data, bech32version, err := bech32.DecodeGeneric(addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode segwit address: %w", err)
@@ -187,7 +187,7 @@ func DecodeSegwitAddress(addr string) (*SegwitAddress, error) {
 	}, nil
 }
 
-func DecodeLegacyAddress(addr string) (Address, error) {
+func decodeLegacyAddress(addr string) (Address, error) {
 	// Serialized public keys are either 65 bytes (130 hex chars) if
 	// uncompressed/hybrid or 33 bytes (66 hex chars) if compressed.
 	isUncompressed := len(addr) == 130
