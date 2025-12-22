@@ -18,7 +18,8 @@ type PaymentRequest struct {
 	// constructed by the sender. If it's not included, the last hop can steal
 	// overpaid amount from the sender by 'probing' with a smaller amount first.
 	// see https://bitcoin.stackexchange.com/a/115738
-	PaymentSecret   lntypes.Hash
+	PaymentSecret lntypes.Hash
+
 	Description     string
 	DescriptionHash lntypes.Hash
 	Features        bolt09.FeatureVector
