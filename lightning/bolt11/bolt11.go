@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/ekzyis/lntutor/lib/bech32"
@@ -70,15 +69,4 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 	buf.Write(sigBase32)
 
 	return nil
-}
-
-func appendOrMoveToEnd[S ~[]E, E comparable](slice S, elem E) S {
-	// remove element if it exists
-	slice = slices.DeleteFunc(slice, func(e E) bool { return e == elem })
-	// add element to end
-	return append(slice, elem)
-}
-
-func remove[S ~[]E, E comparable](slice S, elem E) S {
-	return slices.DeleteFunc(slice, func(e E) bool { return e == elem })
 }

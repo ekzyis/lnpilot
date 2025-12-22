@@ -3,6 +3,7 @@ package bolt11
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"slices"
 	"time"
 
 	"github.com/ekzyis/lntutor/lightning/bolt09"
@@ -146,4 +147,15 @@ func WithPaymentMetadata(paymentMetadata []byte) func(*PaymentRequest) {
 		pr.PaymentMetadata = paymentMetadata
 		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeM)
 	}
+}
+
+func appendOrMoveToEnd[S ~[]E, E comparable](slice S, elem E) S {
+	// remove element if it exists
+	slice = slices.DeleteFunc(slice, func(e E) bool { return e == elem })
+	// add element to end
+	return append(slice, elem)
+}
+
+func remove[S ~[]E, E comparable](slice S, elem E) S {
+	return slices.DeleteFunc(slice, func(e E) bool { return e == elem })
 }
