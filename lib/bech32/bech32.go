@@ -40,12 +40,12 @@ func NewStringBase32Encoder(data string) BytesBase32Encoder {
 	return BytesBase32Encoder{data: []byte(data)}
 }
 
-func NewVarUintBase32Encoder(num uint) VarUintBase32Encoder {
-	return VarUintBase32Encoder{num: num}
-}
-
 func NewUintBase32Encoder(num, bitLen uint) UintBase32Encoder {
 	return UintBase32Encoder{num: num, bitLen: bitLen}
+}
+
+func NewVarUintBase32Encoder(num uint) VarUintBase32Encoder {
+	return VarUintBase32Encoder{num: num}
 }
 
 func (e BytesBase32Encoder) EncodeBase32() ([]byte, error) {
