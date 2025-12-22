@@ -38,7 +38,7 @@ func NewRoutingHint(hopHints []*HopHint) *RoutingHint {
 	return &RoutingHint{HopHints: hopHints}
 }
 
-func (r *RoutingHint) EncodeBase32() ([]byte, error) {
+func (r *RoutingHint) EncodeBolt11() ([]byte, error) {
 	routeHintBase256 := make([]byte, 0, len(r.HopHints)*hopHintLength)
 
 	for _, hopHint := range r.HopHints {
@@ -59,10 +59,6 @@ func (r *RoutingHint) EncodeBase32() ([]byte, error) {
 	}
 
 	return bech32.ConvertBits(routeHintBase256, 8, 5, true)
-}
-
-func (r *RoutingHint) EncodeBolt11() ([]byte, error) {
-	return r.EncodeBase32()
 }
 
 func NewHopHint(

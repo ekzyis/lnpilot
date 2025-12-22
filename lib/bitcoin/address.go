@@ -22,13 +22,6 @@ var Version0 = bech32.Version0
 var VersionM = bech32.VersionM
 
 type Address interface {
-	// Encode encodes the address into the appropriate format (bech32 for
-	// segwit, base58 for legacy).
-	Encode() (string, error)
-
-	// EncodeBase32 encodes the address into a base32-encoded byte slice.
-	EncodeBase32() ([]byte, error)
-
 	// EncodeBolt11 encodes the address into a base32-encoded byte slice, and
 	// includes the version byte for the address type.
 	EncodeBolt11() ([]byte, error)
@@ -62,18 +55,10 @@ func (a *SegwitAddress) Encode() (string, error) {
 	return "", liberr.ErrNotImplemented
 }
 
-func (a *SegwitAddress) EncodeBase32() ([]byte, error) {
+func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
 	base32Bytes, err := bech32.ConvertBits(a.Program, 8, 5, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert witness program to base32: %w", err)
-	}
-	return base32Bytes, nil
-}
-
-func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
-	base32Bytes, err := a.EncodeBase32()
-	if err != nil {
-		return nil, err
 	}
 	return append([]byte{a.Version}, base32Bytes...), nil
 }
@@ -81,11 +66,6 @@ func (a *SegwitAddress) EncodeBolt11() ([]byte, error) {
 func (a *P2PKAddress) Encode() (string, error) {
 	// TODO: implement
 	return "", liberr.ErrNotImplemented
-}
-
-func (a *P2PKAddress) EncodeBase32() ([]byte, error) {
-	// TODO: implement
-	return nil, liberr.ErrNotImplemented
 }
 
 func (a *P2PKAddress) EncodeBolt11() ([]byte, error) {
@@ -98,18 +78,10 @@ func (a *P2PKHAddress) Encode() (string, error) {
 	return "", liberr.ErrNotImplemented
 }
 
-func (a *P2PKHAddress) EncodeBase32() ([]byte, error) {
+func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
 	base32Bytes, err := bech32.ConvertBits(a.PubKeyHash, 8, 5, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert pubkey hash to base32: %w", err)
-	}
-	return base32Bytes, nil
-}
-
-func (a *P2PKHAddress) EncodeBolt11() ([]byte, error) {
-	base32Bytes, err := a.EncodeBase32()
-	if err != nil {
-		return nil, err
 	}
 	// 0x11 is the version byte for P2PKH addresses in bolt11 (17 in base10)
 	return append([]byte{0x11}, base32Bytes...), nil
@@ -120,18 +92,10 @@ func (a *P2SHAddress) Encode() (string, error) {
 	return "", liberr.ErrNotImplemented
 }
 
-func (a *P2SHAddress) EncodeBase32() ([]byte, error) {
+func (a *P2SHAddress) EncodeBolt11() ([]byte, error) {
 	base32Bytes, err := bech32.ConvertBits(a.ScriptHash, 8, 5, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert script hash to base32: %w", err)
-	}
-	return base32Bytes, nil
-}
-
-func (a *P2SHAddress) EncodeBolt11() ([]byte, error) {
-	base32Bytes, err := a.EncodeBase32()
-	if err != nil {
-		return nil, err
 	}
 	// 0x12 is the version byte for P2SH addresses in bolt11 (18 in base10)
 	return append([]byte{0x12}, base32Bytes...), nil

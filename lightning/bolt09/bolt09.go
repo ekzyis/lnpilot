@@ -91,19 +91,15 @@ func (fv *FeatureVector) Bytes() []byte {
 	return b
 }
 
-// EncodeBase32 returns the bytes of the feature vector in base32 encoding,
+// EncodeBolt11 returns the bytes of the feature vector in base32 encoding,
 // big-endian order.
-func (fv *FeatureVector) EncodeBase32() ([]byte, error) {
+func (fv *FeatureVector) EncodeBolt11() ([]byte, error) {
 	b := make([]byte, fv.maxBit/5+1)
 	for bit := range fv.features {
 		index := (len(b) - 1) - int(bit)/5
 		b[index] |= 1 << (bit % 5)
 	}
 	return b, nil
-}
-
-func (fv *FeatureVector) EncodeBolt11() ([]byte, error) {
-	return fv.EncodeBase32()
 }
 
 // DecodeBolt11 decodes the byte slice to set the corresponding features in the

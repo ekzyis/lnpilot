@@ -26,36 +26,27 @@ var (
 // Bolt11Encoder is an interface that represents an encoder for a tagged field
 // in a bolt11 payment request.
 //
-// Most encoders simply encode the data into base32-encoded bytes, in which case
-// EncodeBolt11 simply calls EncodeBase32. But some (like fallback addresses)
-// have additional encoding requirements, in which case EncodeBolt11 will
-// include the additional encoding.
+// Most encoders simply encode the data in base32, but some (like fallback
+// addresses) have additional encoding requirements.
 type Bolt11Encoder interface {
-	EncodeBase32() ([]byte, error)
 	EncodeBolt11() ([]byte, error)
 }
 
 type BytesBolt11Encoder struct {
-	*bech32.BytesBase32Encoder
+	base32Encoder *bech32.BytesBase32Encoder
 }
 
 type StringBolt11Encoder struct {
-	*bech32.BytesBase32Encoder
+	base32Encoder *bech32.BytesBase32Encoder
 }
 
 type VarUintBolt11Encoder struct {
-	*bech32.VarUintBase32Encoder
+	base32Encoder *bech32.VarUintBase32Encoder
 }
 
 type UintBolt11Encoder struct {
-	*bech32.UintBase32Encoder
+	base32Encoder *bech32.UintBase32Encoder
 }
-
-// Every Bolt11Encoder must also implement bech32.Base32Encoder
-var _ bech32.Base32Encoder = (Bolt11Encoder)(nil)
-
-// Every Bitcoin address must also implement Bolt11Encoder
-var _ Bolt11Encoder = (bitcoin.Address)(nil)
 
 var _ Bolt11Encoder = (*BytesBolt11Encoder)(nil)
 var _ Bolt11Encoder = (*StringBolt11Encoder)(nil)
@@ -64,41 +55,42 @@ var _ Bolt11Encoder = (*UintBolt11Encoder)(nil)
 var _ Bolt11Encoder = (*bolt09.FeatureVector)(nil)
 var _ Bolt11Encoder = (*lntypes.Hash)(nil)
 var _ Bolt11Encoder = (*lntypes.RoutingHint)(nil)
+var _ Bolt11Encoder = (bitcoin.Address)(nil)
 
 func (e BytesBolt11Encoder) EncodeBolt11() ([]byte, error) {
-	return e.EncodeBase32()
+	return e.base32Encoder.EncodeBase32()
 }
 
 func (e StringBolt11Encoder) EncodeBolt11() ([]byte, error) {
-	return e.EncodeBase32()
+	return e.base32Encoder.EncodeBase32()
 }
 
 func (e VarUintBolt11Encoder) EncodeBolt11() ([]byte, error) {
-	return e.EncodeBase32()
+	return e.base32Encoder.EncodeBase32()
 }
 
 func (e UintBolt11Encoder) EncodeBolt11() ([]byte, error) {
-	return e.EncodeBase32()
+	return e.base32Encoder.EncodeBase32()
 }
 
 func NewBytesBolt11Encoder(data []byte) Bolt11Encoder {
 	encoder := bech32.NewBytesBase32Encoder(data)
-	return BytesBolt11Encoder{BytesBase32Encoder: &encoder}
+	return BytesBolt11Encoder{base32Encoder: &encoder}
 }
 
 func NewStringBolt11Encoder(data string) Bolt11Encoder {
 	encoder := bech32.NewStringBase32Encoder(data)
-	return StringBolt11Encoder{BytesBase32Encoder: &encoder}
+	return StringBolt11Encoder{base32Encoder: &encoder}
 }
 
 func NewUintBolt11Encoder(num, bitLen uint) Bolt11Encoder {
 	encoder := bech32.NewUintBase32Encoder(num, bitLen)
-	return UintBolt11Encoder{UintBase32Encoder: &encoder}
+	return UintBolt11Encoder{base32Encoder: &encoder}
 }
 
 func NewVarUintBolt11Encoder(num uint) Bolt11Encoder {
 	encoder := bech32.NewVarUintBase32Encoder(num)
-	return VarUintBolt11Encoder{VarUintBase32Encoder: &encoder}
+	return VarUintBolt11Encoder{base32Encoder: &encoder}
 }
 
 // EncodeBech32 returns the bech32 encoded and signed payment request
