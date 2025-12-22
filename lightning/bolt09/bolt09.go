@@ -67,9 +67,6 @@ func NewFeatureVector(bits ...FeatureBit) *FeatureVector {
 	fv := &FeatureVector{features: make(map[FeatureBit]struct{})}
 	for _, bit := range bits {
 		fv.Set(bit)
-		if int(bit) > fv.maxBit {
-			fv.maxBit = int(bit)
-		}
 	}
 	return fv
 }
