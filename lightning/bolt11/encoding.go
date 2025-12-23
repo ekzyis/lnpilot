@@ -23,6 +23,10 @@ var (
 	errUnknownFieldType  = errors.New("unknown field type")
 )
 
+// ======================
+// === encoding stuff ===
+// ======================
+
 // Bolt11Encoder is an interface that represents an encoder for a tagged field
 // in a bolt11 payment request.
 //
