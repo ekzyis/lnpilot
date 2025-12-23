@@ -338,10 +338,6 @@ type TimeDurationBolt11Decoder struct {
 	duration *time.Duration
 }
 
-// TODO: it makes sense that a Bolt11Decoder does not need to implement
-// Base32Decoder, but does it then make sense that a Bolt11Encoder needs to
-// implement Base32Encoder?
-
 var _ Bolt11Decoder = (*StringBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*TimeDurationBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*lntypes.Hash)(nil)
