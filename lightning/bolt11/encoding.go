@@ -338,11 +338,16 @@ type TimeDurationBolt11Decoder struct {
 	duration *time.Duration
 }
 
+type BytesBolt11Decoder struct {
+	bytes *[]byte
+}
+
 var _ Bolt11Decoder = (*StringBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*TimeDurationBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*bitcoin.AddressBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*lntypes.Hash)(nil)
 var _ Bolt11Decoder = (*bolt09.FeatureVector)(nil)
+var _ Bolt11Decoder = (*BytesBolt11Decoder)(nil)
 
 func (d StringBolt11Decoder) DecodeBolt11(data []byte) error {
 	decoded, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
@@ -362,12 +367,25 @@ func (d TimeDurationBolt11Decoder) DecodeBolt11(data []byte) error {
 	return nil
 }
 
+func (d BytesBolt11Decoder) DecodeBolt11(data []byte) error {
+	decoded, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
+	if err != nil {
+		return err
+	}
+	*d.bytes = decoded
+	return nil
+}
+
 func NewStringBolt11Decoder(s *string) Bolt11Decoder {
 	return StringBolt11Decoder{s: s}
 }
 
 func NewTimeDurationBolt11Decoder(duration *time.Duration) Bolt11Decoder {
 	return TimeDurationBolt11Decoder{duration: duration}
+}
+
+func NewBytesBolt11Decoder(bytes *[]byte) Bolt11Decoder {
+	return BytesBolt11Decoder{bytes: bytes}
 }
 
 // DecodePaymentRequest decodes the bech32-encoded payment request into a
@@ -549,6 +567,8 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 		return NewTimeDurationBolt11Decoder(&pr.Expiry), nil
 	case fieldTypeF:
 		return bitcoin.NewAddressBolt11Decoder(&pr.FallbackAddress, pr.Network), nil
+	case fieldTypeM:
+		return NewBytesBolt11Decoder(&pr.PaymentMetadata), nil
 	}
 
 	return nil, errUnknownFieldType

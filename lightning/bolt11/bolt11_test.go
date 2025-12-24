@@ -569,8 +569,6 @@ func TestPaymentRequest_DecodeBech32_Spec_014(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_015(t *testing.T) {
 	// Please send 0.01 BTC with payment metadata 0x01fafaf0
 
-	t.Skip("decoding payment metadata not supported yet")
-
 	assert := assert.New(t)
 
 	expected := "lnbc10m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdp9wpshjmt9de6zqmt9w3skgct5vysxjmnnd9jx2mq8q8a04uqsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9q2gqqqqqqsgq7hf8he7ecf7n4ffphs6awl9t6676rrclv9ckg3d3ncn7fct63p6s365duk5wrk202cfy3aj5xnnp5gs3vrdvruverwwq7yzhkf5a3xqpd05wjc"
