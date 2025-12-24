@@ -516,7 +516,7 @@ func (pr *PaymentRequest) decodeTaggedFields(dataBase32 []byte) error {
 		}
 
 		tfDataLengthBase32 := make([]byte, 2)
-		_, err = r.Read(tfDataLengthBase32)
+		_, err = io.ReadFull(r, tfDataLengthBase32)
 		if err != nil {
 			return fmt.Errorf("failed to read data length of 0x%02x: %w", fieldType, err)
 		}
@@ -527,7 +527,7 @@ func (pr *PaymentRequest) decodeTaggedFields(dataBase32 []byte) error {
 		}
 
 		tfDataBase32 := make([]byte, tfDataLength)
-		_, err = r.Read(tfDataBase32)
+		_, err = io.ReadFull(r, tfDataBase32)
 		if err != nil {
 			return fmt.Errorf("failed to read data of 0x%02x: %w", fieldType, err)
 		}
