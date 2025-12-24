@@ -1,8 +1,10 @@
 package lntypes
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
@@ -59,6 +61,65 @@ func (r *RoutingHint) EncodeBolt11() ([]byte, error) {
 	}
 
 	return bech32.ConvertBits(routeHintBase256, 8, 5, true)
+}
+
+func (r *RoutingHint) DecodeBolt11(data []byte) error {
+	dataBase256, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
+	if err != nil {
+		return err
+	}
+
+	if len(dataBase256)%hopHintLength != 0 {
+		return fmt.Errorf("invalid routing hint data length: got %d, expected multiple of %d", len(data), hopHintLength)
+	}
+
+	reader := bytes.NewReader(dataBase256)
+	var hopHints []*HopHint
+
+	for reader.Len() >= hopHintLength {
+		// pubkey
+		pubKeyBytes := make([]byte, 33)
+		if _, err := io.ReadFull(reader, pubKeyBytes); err != nil {
+			return fmt.Errorf("failed to read pubkey in routing hint: %w", err)
+		}
+		pubKey, err := ParseNodePublicKeyFromBytes(pubKeyBytes)
+		if err != nil {
+			return fmt.Errorf("failed to parse pubkey in routing hint: %w", err)
+		}
+
+		// scid
+		scidBytes := make([]byte, 8)
+		if _, err := io.ReadFull(reader, scidBytes); err != nil {
+			return fmt.Errorf("failed to read scid in routing hint: %w", err)
+		}
+		scid := NewShortChannelIDFromUint64(binary.BigEndian.Uint64(scidBytes))
+
+		// base fee
+		baseFeeBytes := make([]byte, 4)
+		if _, err := io.ReadFull(reader, baseFeeBytes); err != nil {
+			return fmt.Errorf("failed to read base fee in routing hint: %w", err)
+		}
+		baseFee := MilliSatoshi(binary.BigEndian.Uint32(baseFeeBytes))
+
+		// fee ppm
+		feePPMBytes := make([]byte, 4)
+		if _, err := io.ReadFull(reader, feePPMBytes); err != nil {
+			return fmt.Errorf("failed to read fee ppm in routing hint: %w", err)
+		}
+		feePPM := binary.BigEndian.Uint32(feePPMBytes)
+
+		// cltv expiry delta
+		cltvExpiryDeltaBytes := make([]byte, 2)
+		if _, err := io.ReadFull(reader, cltvExpiryDeltaBytes); err != nil {
+			return fmt.Errorf("failed to read cltv expiry delta in routing hint: %w", err)
+		}
+		cltvExpiryDelta := binary.BigEndian.Uint16(cltvExpiryDeltaBytes)
+
+		hopHints = append(hopHints, NewHopHint(pubKey, scid, baseFee, feePPM, cltvExpiryDelta))
+	}
+
+	r.HopHints = hopHints
+	return nil
 }
 
 func NewHopHint(
@@ -123,4 +184,12 @@ func MustParseShortChannelID(str string) *ShortChannelID {
 
 func (scid *ShortChannelID) ToUint64() uint64 {
 	return (uint64(scid.BlockHeight) << 40) | (uint64(scid.TxIndex) << 16) | uint64(scid.OutIndex)
+}
+
+func NewShortChannelIDFromUint64(num uint64) *ShortChannelID {
+	return &ShortChannelID{
+		BlockHeight: uint32(num>>40) & 0xffffff,
+		TxIndex:     uint32(num>>16) & 0xffffff,
+		OutIndex:    uint16(num & 0xffff),
+	}
 }

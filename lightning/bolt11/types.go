@@ -40,9 +40,9 @@ type PaymentRequest struct {
 	// the payment.
 	PaymentMetadata []byte
 
-	// routingHintNext returns the next routing hint we should write to the
-	// bech32 encoded payment request when we encounter another `r` tagged
-	// field. It is initialized before writing the tagged fields.
+	// routingHintNext returns the next routing hint we should read/write
+	// from/to the bech32 encoded payment request when we encounter another `r`
+	// tagged field. It is initialized before reading/writing the tagged fields.
 	routingHintNext func() (*lntypes.RoutingHint, bool)
 }
 

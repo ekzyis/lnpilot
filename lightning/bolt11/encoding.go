@@ -342,12 +342,17 @@ type BytesBolt11Decoder struct {
 	bytes *[]byte
 }
 
+type RoutingHintBolt11Decoder struct {
+	routingHint *lntypes.RoutingHint
+}
+
 var _ Bolt11Decoder = (*StringBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*TimeDurationBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*bitcoin.AddressBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*lntypes.Hash)(nil)
 var _ Bolt11Decoder = (*bolt09.FeatureVector)(nil)
 var _ Bolt11Decoder = (*BytesBolt11Decoder)(nil)
+var _ Bolt11Decoder = (*RoutingHintBolt11Decoder)(nil)
 
 func (d StringBolt11Decoder) DecodeBolt11(data []byte) error {
 	decoded, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
@@ -376,6 +381,10 @@ func (d BytesBolt11Decoder) DecodeBolt11(data []byte) error {
 	return nil
 }
 
+func (d RoutingHintBolt11Decoder) DecodeBolt11(data []byte) error {
+	return d.routingHint.DecodeBolt11(data)
+}
+
 func NewStringBolt11Decoder(s *string) Bolt11Decoder {
 	return StringBolt11Decoder{s: s}
 }
@@ -386,6 +395,10 @@ func NewTimeDurationBolt11Decoder(duration *time.Duration) Bolt11Decoder {
 
 func NewBytesBolt11Decoder(bytes *[]byte) Bolt11Decoder {
 	return BytesBolt11Decoder{bytes: bytes}
+}
+
+func NewRoutingHintBolt11Decoder(routingHint *lntypes.RoutingHint) Bolt11Decoder {
+	return RoutingHintBolt11Decoder{routingHint: routingHint}
 }
 
 // DecodePaymentRequest decodes the bech32-encoded payment request into a
@@ -504,6 +517,15 @@ func (pr *PaymentRequest) decodeTimestamp(dataBase32 []byte) error {
 // decodeTaggedFields decodes the tagged fields from the byte slice and sets
 // them in the payment request. The byte slice must be in base32.
 func (pr *PaymentRequest) decodeTaggedFields(dataBase32 []byte) error {
+	// For decoding, we append a new RoutingHint to the slice and return a
+	// pointer to it each time one is encountered
+	pr.routingHintNext = func() (*lntypes.RoutingHint, bool) {
+		hint := &lntypes.RoutingHint{}
+		pr.RoutingHints = append(pr.RoutingHints, hint)
+		return hint, true
+	}
+	defer func() { pr.routingHintNext = nil }()
+
 	r := bytes.NewReader(dataBase32)
 
 	for {
@@ -569,6 +591,12 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 		return bitcoin.NewAddressBolt11Decoder(&pr.FallbackAddress, pr.Network), nil
 	case fieldTypeM:
 		return NewBytesBolt11Decoder(&pr.PaymentMetadata), nil
+	case fieldTypeR:
+		hint, ok := pr.routingHintNext()
+		if !ok {
+			return nil, errFieldDataNotFound
+		}
+		return NewRoutingHintBolt11Decoder(hint), nil
 	}
 
 	return nil, errUnknownFieldType

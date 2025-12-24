@@ -56,3 +56,11 @@ func MustParseNodePublicKeyFromHex(hexStr string) *NodePublicKey {
 func (k NodePublicKey) SerializeCompressed() ([]byte, error) {
 	return k.secp256k1.SerializeCompressed(), nil
 }
+
+func ParseNodePublicKeyFromBytes(bytes []byte) (*NodePublicKey, error) {
+	pubKey, err := secp256k1.ParsePubKey(bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse public key: %w", err)
+	}
+	return NewNodePublicKey(pubKey), nil
+}
