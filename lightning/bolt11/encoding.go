@@ -16,6 +16,7 @@ import (
 	"github.com/ekzyis/lntutor/lib/secp256k1"
 	"github.com/ekzyis/lntutor/lightning/bolt09"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
+	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -346,6 +347,10 @@ type RoutingHintBolt11Decoder struct {
 	routingHint *lntypes.RoutingHint
 }
 
+type UintBolt11Decoder[T constraints.Unsigned] struct {
+	num *T
+}
+
 var _ Bolt11Decoder = (*StringBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*TimeDurationBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*bitcoin.AddressBolt11Decoder)(nil)
@@ -353,6 +358,11 @@ var _ Bolt11Decoder = (*lntypes.Hash)(nil)
 var _ Bolt11Decoder = (*bolt09.FeatureVector)(nil)
 var _ Bolt11Decoder = (*BytesBolt11Decoder)(nil)
 var _ Bolt11Decoder = (*RoutingHintBolt11Decoder)(nil)
+var _ Bolt11Decoder = (*UintBolt11Decoder[uint8])(nil)
+var _ Bolt11Decoder = (*UintBolt11Decoder[uint16])(nil)
+var _ Bolt11Decoder = (*UintBolt11Decoder[uint32])(nil)
+var _ Bolt11Decoder = (*UintBolt11Decoder[uint64])(nil)
+var _ Bolt11Decoder = (*UintBolt11Decoder[uint])(nil)
 
 func (d StringBolt11Decoder) DecodeBolt11(data []byte) error {
 	decoded, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
@@ -381,6 +391,15 @@ func (d BytesBolt11Decoder) DecodeBolt11(data []byte) error {
 	return nil
 }
 
+func (d UintBolt11Decoder[T]) DecodeBolt11(data []byte) error {
+	num, err := bech32.NewUintBase32Decoder(data).DecodeBase32()
+	if err != nil {
+		return err
+	}
+	*d.num = T(num)
+	return nil
+}
+
 func (d RoutingHintBolt11Decoder) DecodeBolt11(data []byte) error {
 	return d.routingHint.DecodeBolt11(data)
 }
@@ -399,6 +418,10 @@ func NewBytesBolt11Decoder(bytes *[]byte) Bolt11Decoder {
 
 func NewRoutingHintBolt11Decoder(routingHint *lntypes.RoutingHint) Bolt11Decoder {
 	return RoutingHintBolt11Decoder{routingHint: routingHint}
+}
+
+func NewUintBolt11Decoder[T constraints.Unsigned](num *T) Bolt11Decoder {
+	return UintBolt11Decoder[T]{num: num}
 }
 
 // DecodePaymentRequest decodes the bech32-encoded payment request into a
@@ -597,6 +620,8 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 			return nil, errFieldDataNotFound
 		}
 		return NewRoutingHintBolt11Decoder(hint), nil
+	case fieldTypeC:
+		return NewUintBolt11Decoder(&pr.MinFinalCLTVExpiryDelta), nil
 	}
 
 	return nil, errUnknownFieldType
