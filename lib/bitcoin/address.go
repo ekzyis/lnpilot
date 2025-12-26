@@ -137,7 +137,7 @@ func (a *SegwitAddress) Encode() (string, error) {
 	case 1:
 		return bech32.EncodeM(hrp, data)
 	default:
-		return "", fmt.Errorf("invalid witness version: %d", a.Version)
+		return "", errInvalidWitnessVersion
 	}
 }
 
