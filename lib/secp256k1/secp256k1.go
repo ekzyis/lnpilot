@@ -16,8 +16,10 @@ type CompactECDSASignature struct {
 }
 
 type Signer interface {
-	// CompactECDSASign returns a compact ECDSA signature over secp256k1. The
-	// message will be hashed using sha256 before signing.
+	// CompactECDSASign returns a deterministic, compact, low-S ECDSA signature
+	// over secp256k1 according to RFC6979 and BIP62. The message will be hashed
+	// using sha256 before signing. The signature will reference a compressed
+	// public key.
 	CompactECDSASign(msg []byte) (*CompactECDSASignature, error)
 }
 
@@ -49,6 +51,9 @@ func NewPrivateKeySigner(bytes []byte) (Signer, error) {
 	}, nil
 }
 
+// CompactECDSASign returns a deterministic, compact, low-S ECDSA signature over
+// secp256k1 according to RFC6979 and BIP62. The message will be hashed using
+// sha256 before signing. The signature will reference a compressed public key.
 func (s *PrivateKeySigner) CompactECDSASign(msg []byte) (*CompactECDSASignature, error) {
 	hash := sha256.Sum256(msg)
 
@@ -56,8 +61,8 @@ func (s *PrivateKeySigner) CompactECDSASign(msg []byte) (*CompactECDSASignature,
 	// reference a compressed public key
 	compressed := true
 
-	// this will generate a deterministic compact ECDSA signature according to
-	// RFC 6979
+	// this will generate a deterministic, compact, low-S ECDSA signature
+	// according to RFC6979 and BIP62, referencing a compressed public key.
 	sig := ecdsa.SignCompact(s.privateKey, hash[:], compressed)
 
 	compactRecoveryId := sig[0]

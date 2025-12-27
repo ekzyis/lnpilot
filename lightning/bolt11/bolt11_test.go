@@ -26,8 +26,6 @@ var (
 	longDescriptionHash = sha256.Sum256([]byte(longDescription))
 )
 
-// TestSigner generates deterministic compact ECDSA signatures over secp256k1
-// using RFC6979 and HMAC-SHA256.
 type TestSigner struct{}
 
 func (s *TestSigner) CompactECDSASign(msg []byte) (*secp256k1.CompactECDSASignature, error) {
