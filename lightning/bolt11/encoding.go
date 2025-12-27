@@ -461,7 +461,21 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 		return nil, fmt.Errorf("failed to decode tagged fields: %w", err)
 	}
 
-	// TODO: verify signature
+	sigBytesBase32 := dataBase32[len(dataBase32)-sigLengthBase32:]
+	sigBytesBase256, err := bech32.NewBytesBase32Decoder(sigBytesBase32).DecodeBase32()
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode signature: %w", err)
+	}
+
+	sig, err := secp256k1.NewCompactECDSASignatureFromBytes(sigBytesBase256)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse signature: %w", err)
+	}
+
+	msg := append([]byte(hrp), tfBase32...)
+	if !sig.Verify(msg) {
+		return nil, fmt.Errorf("invalid signature")
+	}
 
 	return &pr, nil
 }

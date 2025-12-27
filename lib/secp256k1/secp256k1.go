@@ -72,3 +72,37 @@ func (s *PrivateKeySigner) CompactECDSASign(msg []byte) (*CompactECDSASignature,
 		S:          [32]byte(sig[33:65]),
 	}, nil
 }
+
+func NewCompactECDSASignatureFromBytes(sigBytes []byte) (*CompactECDSASignature, error) {
+	if len(sigBytes) != 65 {
+		return nil, fmt.Errorf("signature bytes must be 65 bytes long, got %d", len(sigBytes))
+	}
+	return &CompactECDSASignature{
+		RecoveryId: sigBytes[64] + compactSigMagicOffset + compactSigCompPubKey,
+		R:          [32]byte(sigBytes[:32]),
+		S:          [32]byte(sigBytes[32:64]),
+	}, nil
+}
+
+func (sig *CompactECDSASignature) Verify(msg []byte) bool {
+	var (
+		sigBytes = make([]byte, 65)
+		hash     = sha256.Sum256(msg)
+		r        = new(secp256k1.ModNScalar)
+		s        = new(secp256k1.ModNScalar)
+	)
+
+	sigBytes[0] = sig.RecoveryId
+	copy(sigBytes[1:33], sig.R[:])
+	copy(sigBytes[33:65], sig.S[:])
+
+	pubKey, _, err := ecdsa.RecoverCompact(sigBytes, hash[:])
+	if err != nil {
+		return false
+	}
+
+	s.SetBytes(&sig.S)
+	r.SetBytes(&sig.R)
+	rawSig := ecdsa.NewSignature(r, s)
+	return rawSig.Verify(hash[:], pubKey)
+}
