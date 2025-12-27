@@ -17,14 +17,17 @@ import (
 var errInvalidLegacyAddress = errors.New("failed to decode as legacy address")
 var errNoWitnessVersion = errors.New("no witness version")
 var errInvalidWitnessVersion = errors.New("invalid witness version")
+var ErrUnknownVersion = errors.New("unknown version")
 
 var Version0 = bech32.Version0
 var VersionM = bech32.VersionM
 
 const (
-	segwitMainnetHRP = "bc"
-	segwitTestnetHRP = "tb"
-	segwitRegtestHRP = "bcrt"
+	segwitMainnetHRP      = "bc"
+	segwitTestnetHRP      = "tb"
+	segwitRegtestHRP      = "bcrt"
+	segwitVersion0   byte = 0
+	segwitVersion1   byte = 1
 
 	p2pkhBolt11Version  = 0x11
 	p2pkhMainnetVersion = 0x00 // starts with 1
@@ -94,8 +97,10 @@ func (d AddressBolt11Decoder) DecodeBolt11(data []byte) error {
 		a = &P2PKHAddress{Network: d.network}
 	case p2shBolt11Version:
 		a = &P2SHAddress{Network: d.network}
+	case segwitVersion0, segwitVersion1:
+		a = &SegwitAddress{Network: d.network, Version: version}
 	default:
-		a = &SegwitAddress{Network: d.network}
+		return ErrUnknownVersion
 	}
 
 	err := a.DecodeBolt11(data)
@@ -132,9 +137,9 @@ func (a *SegwitAddress) Encode() (string, error) {
 	data := append([]byte{a.Version}, progBase32...)
 
 	switch a.Version {
-	case 0:
+	case segwitVersion0:
 		return bech32.Encode(hrp, data)
-	case 1:
+	case segwitVersion1:
 		return bech32.EncodeM(hrp, data)
 	default:
 		return "", errInvalidWitnessVersion

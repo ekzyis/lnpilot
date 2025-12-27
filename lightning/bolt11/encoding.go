@@ -583,6 +583,10 @@ func (pr *PaymentRequest) decodeTaggedFields(dataBase32 []byte) error {
 		}
 
 		err = tfDecoder.DecodeBolt11(tfDataBase32)
+		if errors.Is(err, bitcoin.ErrUnknownVersion) {
+			// a reader MUST skip over `f` fields that use an unknown `version`
+			continue
+		}
 		if err != nil {
 			return fmt.Errorf("failed to decode data of 0x%02x: %w", fieldType, err)
 		}
