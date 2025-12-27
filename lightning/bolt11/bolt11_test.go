@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lib/secp256k1"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
@@ -32,19 +30,13 @@ var (
 // using RFC6979 and HMAC-SHA256.
 type TestSigner struct{}
 
-func (s *TestSigner) CompactECDSASign(msg []byte) (secp256k1.CompactECDSASignature, error) {
-	privKey := _secp256k1.PrivKeyFromBytes(privKeyBytes)
+func (s *TestSigner) CompactECDSASign(msg []byte) (*secp256k1.CompactECDSASignature, error) {
+	signer, err := secp256k1.NewPrivateKeySigner(privKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create test signer: %w", err)
+	}
 
-	hash := sha256.Sum256(msg)
-	// this will generate a deterministic compact ECDSA signature according to
-	// RFC 6979
-	sig := ecdsa.SignCompact(privKey, hash[:], true)
-
-	return secp256k1.CompactECDSASignature{
-		RecoveryId: sig[0] - 27 - 4,
-		R:          [32]byte(sig[1:33]),
-		S:          [32]byte(sig[33:65]),
-	}, nil
+	return signer.CompactECDSASign(msg)
 }
 
 func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
