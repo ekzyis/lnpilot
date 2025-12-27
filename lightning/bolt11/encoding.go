@@ -578,6 +578,11 @@ func (pr *PaymentRequest) decodeTaggedFields(dataBase32 []byte) error {
 		}
 
 		tfDecoder, err := pr.getTaggedFieldDecoder(fieldType)
+		if err == errUnknownFieldType {
+			// We skip any field we don't know about. The "it's okay to be
+			// odd"-rule only applies to feature bits.
+			continue
+		}
 		if err != nil {
 			return fmt.Errorf("failed to get tagged field decoder for 0x%02x: %w", fieldType, err)
 		}
