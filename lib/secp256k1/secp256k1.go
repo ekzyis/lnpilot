@@ -111,3 +111,15 @@ func (sig *CompactECDSASignature) Verify(msg []byte) bool {
 	rawSig := ecdsa.NewSignature(r, s)
 	return rawSig.Verify(hash[:], pubKey)
 }
+
+func (sig *CompactECDSASignature) NegateS() *CompactECDSASignature {
+	s := new(secp256k1.ModNScalar)
+	s.SetBytes(&sig.S)
+	s.Negate()
+
+	return &CompactECDSASignature{
+		RecoveryId: sig.RecoveryId,
+		R:          sig.R,
+		S:          [32]byte(s.Bytes()),
+	}
+}

@@ -28,6 +28,9 @@ var (
 
 type TestSigner struct{}
 
+// Like TestSigner, but it generates high-S signatures.
+type TestSigner2 struct{}
+
 func (s *TestSigner) CompactECDSASign(msg []byte) (*secp256k1.CompactECDSASignature, error) {
 	signer, err := secp256k1.NewPrivateKeySigner(privKeyBytes)
 	if err != nil {
@@ -35,6 +38,17 @@ func (s *TestSigner) CompactECDSASign(msg []byte) (*secp256k1.CompactECDSASignat
 	}
 
 	return signer.CompactECDSASign(msg)
+}
+
+func (s *TestSigner2) CompactECDSASign(msg []byte) (*secp256k1.CompactECDSASignature, error) {
+	sig, err := (&TestSigner{}).CompactECDSASign(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	// since sig is a low-S signature, negating S will produce a high-S
+	// signature
+	return sig.NegateS(), nil
 }
 
 func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
@@ -622,8 +636,6 @@ func TestPaymentRequest_EncodeBech32_Spec_015(t *testing.T) {
 func TestPaymentRequest_EncodeBech32_Spec_016(t *testing.T) {
 	// Public-key recovery with high-S signature
 
-	t.Skip("not sure why this doesn't work yet")
-
 	assert := assert.New(t)
 
 	expected := "lnbc1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaq9qrsgq357wnc5r2ueh7ck6q93dj32dlqnls087fxdwk8qakdyafkq3yap2r09nt4ndd0unm3z9u5t48y6ucv4r5sg7lk98c77ctvjczkspk5qprc90gx"
@@ -635,10 +647,11 @@ func TestPaymentRequest_EncodeBech32_Spec_016(t *testing.T) {
 		WithPaymentHash([32]byte(paymentHashBytes)),
 		WithDescription("Please consider supporting this project"),
 		WithFeatureBits(PaymentSecretRequired, VarOnionOptinRequired),
-		WithExpiry(0),
+		WithNoExpiry(),
+		WithNoMinFinalCLTVExpiryDelta(),
 	)
 
-	encoded, err := pr.EncodeBech32(&TestSigner{})
+	encoded, err := pr.EncodeBech32(&TestSigner2{})
 	assert.NoError(err)
 	assert.Equal(expected, encoded)
 
