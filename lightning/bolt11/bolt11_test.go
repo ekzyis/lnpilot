@@ -728,3 +728,11 @@ func TestPaymentRequest_Invalid_Spec_024(t *testing.T) {
 	_, err := DecodePaymentRequest(encoded)
 	assert.ErrorIs(err, ErrInvalidHRP)
 }
+
+func TestPaymentRequest_Invalid_Spec_025(t *testing.T) {
+	// Missing required `s` field.
+	assert := assert.New(t)
+	encoded := "lnbc20m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqhp58yjmdan79s6qqdhdzgynm4zwqd5d7xmw5fk98klysy043l2ahrqs9qrsgq7ea976txfraylvgzuxs8kgcw23ezlrszfnh8r6qtfpr6cxga50aj6txm9rxrydzd06dfeawfk6swupvz4erwnyutnjq7x39ymw6j38gp49qdkj"
+	_, err := DecodePaymentRequest(encoded)
+	assert.ErrorIs(err, ErrInvalidPaymentRequest)
+}

@@ -70,3 +70,21 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 
 	return nil
 }
+
+// validate checks if the payment request contains all required fields: payment
+// hash, payment secret, description or description hash.
+func (pr *PaymentRequest) validate() error {
+	if pr.PaymentSecret.IsZero() {
+		return fmt.Errorf("%w: payment secret missing", ErrInvalidPaymentRequest)
+	}
+	if pr.PaymentHash.IsZero() {
+		return fmt.Errorf("%w: payment hash missing", ErrInvalidPaymentRequest)
+	}
+	if pr.Description == "" && pr.DescriptionHash.IsZero() {
+		return fmt.Errorf("%w: description and description hash are both missing", ErrInvalidPaymentRequest)
+	}
+	if pr.Description != "" && !pr.DescriptionHash.IsZero() {
+		return fmt.Errorf("%w: description and description hash are both present", ErrInvalidPaymentRequest)
+	}
+	return nil
+}

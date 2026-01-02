@@ -20,10 +20,11 @@ import (
 )
 
 var (
-	errFieldDataNotFound = errors.New("field data not found")
-	errUnknownFieldType  = errors.New("unknown field type")
-	ErrInvalidSignature  = errors.New("invalid signature")
-	ErrInvalidHRP        = errors.New("invalid hrp")
+	errFieldDataNotFound     = errors.New("field data not found")
+	errUnknownFieldType      = errors.New("unknown field type")
+	ErrInvalidSignature      = errors.New("invalid signature")
+	ErrInvalidHRP            = errors.New("invalid hrp")
+	ErrInvalidPaymentRequest = errors.New("invalid payment request")
 )
 
 // ======================
@@ -102,7 +103,10 @@ func NewVarUintBolt11Encoder(num uint) Bolt11Encoder {
 
 // EncodeBech32 returns the bech32 encoded and signed payment request
 func (pr *PaymentRequest) EncodeBech32(signer secp256k1.Signer) (string, error) {
-	// TODO: validate pr first?
+	err := pr.validate()
+	if err != nil {
+		return "", err
+	}
 
 	var buf bytes.Buffer
 
@@ -481,6 +485,11 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 	msg := append([]byte(hrp), tfBase32...)
 	if !sig.Verify(msg) {
 		return nil, ErrInvalidSignature
+	}
+
+	err = pr.validate()
+	if err != nil {
+		return nil, err
 	}
 
 	return &pr, nil
