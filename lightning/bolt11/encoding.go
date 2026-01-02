@@ -22,6 +22,7 @@ import (
 var (
 	errFieldDataNotFound = errors.New("field data not found")
 	errUnknownFieldType  = errors.New("unknown field type")
+	ErrInvalidSignature  = errors.New("invalid signature")
 )
 
 // ======================
@@ -472,7 +473,7 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 
 	msg := append([]byte(hrp), tfBase32...)
 	if !sig.Verify(msg) {
-		return nil, fmt.Errorf("invalid signature")
+		return nil, ErrInvalidSignature
 	}
 
 	return &pr, nil

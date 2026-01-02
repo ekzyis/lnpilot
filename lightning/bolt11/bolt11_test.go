@@ -696,3 +696,11 @@ func TestPaymentRequest_Invalid_Spec_020(t *testing.T) {
 	_, err := DecodePaymentRequest(encoded)
 	assert.ErrorIs(err, bech32.ErrMixedCase)
 }
+
+func TestPaymentRequest_Invalid_Spec_021(t *testing.T) {
+	// Signature is not recoverable.
+	assert := assert.New(t)
+	encoded := "lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpusp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqwgt7mcn5yqw3yx0w94pswkpq6j9uh6xfqqqtsk4tnarugeektd4hg5975x9am52rz4qskukxdmjemg92vvqz8nvmsye63r5ykel43pgz7zq0g2"
+	_, err := DecodePaymentRequest(encoded)
+	assert.ErrorIs(err, ErrInvalidSignature)
+}
