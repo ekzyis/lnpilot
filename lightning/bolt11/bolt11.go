@@ -11,7 +11,9 @@ import (
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 )
 
-func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentRequest {
+// NewPaymentRequest creates a new payment request with the given amount and
+// options. It returns an error if the payment request is invalid.
+func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) (*PaymentRequest, error) {
 	var paymentSecret lntypes.Hash
 	// rand.Read never returns an error, and always fills the buffer entirely
 	// see https://pkg.go.dev/crypto/rand#Read
@@ -39,7 +41,12 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 		option(pr)
 	}
 
-	return pr
+	err := pr.validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return pr, nil
 }
 
 func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp string) error {

@@ -49,6 +49,6 @@ func WithNetwork(network lntypes.Network) func(*Node) {
 	}
 }
 
-func (n *Node) CreatePaymentRequest(msats uint64) *bolt11.PaymentRequest {
+func (n *Node) CreatePaymentRequest(msats uint64) (*bolt11.PaymentRequest, error) {
 	return bolt11.NewPaymentRequest(msats, bolt11.WithNetwork(n.network))
 }
