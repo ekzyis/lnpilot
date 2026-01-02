@@ -51,7 +51,7 @@ func (s *TestSigner2) CompactECDSASign(msg []byte) (*secp256k1.CompactECDSASigna
 	return sig.NegateS(), nil
 }
 
-func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
+func TestPaymentRequest_NewPaymentRequest_Defaults(t *testing.T) {
 	assert := assert.New(t)
 
 	before := time.Now()
@@ -178,7 +178,7 @@ func TestPaymentRequest_NewPaymentRequest(t *testing.T) {
 	assert.True(len(tfMatchers) == 0, "missing tagged fields in encoded payment request")
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_001(t *testing.T) {
 	// Please make a donation of any amount using payment_hash
 	// 0001020304050607080900010203040506070809000102030405060708090102 to me
 	// @03e7156ae33b0a208d0744199163177e909e80176e55d97a2f221ede0f934dd9ad
@@ -207,7 +207,7 @@ func TestPaymentRequest_EncodeBech32_Spec_001(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_002(t *testing.T) {
 	// Please send $3 for a cup of coffee to the same peer, within one minute
 
 	assert := assert.New(t)
@@ -234,7 +234,7 @@ func TestPaymentRequest_EncodeBech32_Spec_002(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_003(t *testing.T) {
 	// Please send 0.0025 BTC for a cup of nonsense (ナンセンス 1杯) to the same
 	// peer, within one minute
 
@@ -262,7 +262,7 @@ func TestPaymentRequest_EncodeBech32_Spec_003(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_004(t *testing.T) {
 	// Now send $24 for an entire list of things (hashed)
 
 	assert := assert.New(t)
@@ -289,7 +289,7 @@ func TestPaymentRequest_EncodeBech32_Spec_004(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_005(t *testing.T) {
 	// The same, on testnet, with a fallback address
 	// mk2QpYatsKicvFVuTAQLBryyccRXMUaGHP
 
@@ -319,7 +319,7 @@ func TestPaymentRequest_EncodeBech32_Spec_005(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_006(t *testing.T) {
 	// On mainnet, with fallback address 1RustyRX2oai4EYYDpQGWvEL62BBGqN9T with
 	// extra routing info to go via nodes
 	// 029e03a901b85534ff1e92c43c74431f7ce72046060fcf7a95c37e148f78c77255 then
@@ -366,7 +366,7 @@ func TestPaymentRequest_EncodeBech32_Spec_006(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_007(t *testing.T) {
 	// On mainnet, with fallback (P2SH) address
 	// 3EktnHQD7RiAE6uzMj2ZifT9YgRrkSgzQX
 
@@ -395,7 +395,7 @@ func TestPaymentRequest_EncodeBech32_Spec_007(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_008(t *testing.T) {
 	// On mainnet, with fallback (P2WPKH) address
 	// bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
 
@@ -424,7 +424,7 @@ func TestPaymentRequest_EncodeBech32_Spec_008(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_009(t *testing.T) {
 	// On mainnet, with fallback (P2WSH) address
 	// bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3
 
@@ -453,7 +453,7 @@ func TestPaymentRequest_EncodeBech32_Spec_009(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_010(t *testing.T) {
 	// On mainnet, with fallback (P2TR) address
 	// bc1pptdvg0d2nj99568qn6ssdy4cygnwuxgw2ukmnwgwz7jpqjz2kszse2s3lm
 
@@ -482,7 +482,7 @@ func TestPaymentRequest_EncodeBech32_Spec_010(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_011(t *testing.T) {
 	// Please send 0.00967878534 BTC for a list of items within one week, amount
 	// in pico-BTC
 
@@ -521,7 +521,7 @@ func TestPaymentRequest_EncodeBech32_Spec_011(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_012(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_012(t *testing.T) {
 	// Please send $30 for coffee beans to the same peer, which supports
 	// features 8, 14 and 99, using secret
 	// 0x1111111111111111111111111111111111111111111111111111111111111111
@@ -550,7 +550,7 @@ func TestPaymentRequest_EncodeBech32_Spec_012(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_DecodeBech32_Spec_013(t *testing.T) {
+func TestPaymentRequest_Decode_Spec_013(t *testing.T) {
 	// Same, but all upper case.
 
 	assert := assert.New(t)
@@ -573,7 +573,7 @@ func TestPaymentRequest_DecodeBech32_Spec_013(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_DecodeBech32_Spec_014(t *testing.T) {
+func TestPaymentRequest_Decode_Spec_014(t *testing.T) {
 	// Same, but including fields which must be ignored.
 
 	// AFAICT, the encoded bech32 payment request should not be valid because of
@@ -603,7 +603,7 @@ func TestPaymentRequest_DecodeBech32_Spec_014(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_015(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_015(t *testing.T) {
 	// Please send 0.01 BTC with payment metadata 0x01fafaf0
 
 	assert := assert.New(t)
@@ -633,7 +633,7 @@ func TestPaymentRequest_EncodeBech32_Spec_015(t *testing.T) {
 	assert.Equal(pr, decoded)
 }
 
-func TestPaymentRequest_EncodeBech32_Spec_016(t *testing.T) {
+func TestPaymentRequest_EncodeDecode_Spec_016(t *testing.T) {
 	// Public-key recovery with high-S signature
 
 	assert := assert.New(t)
