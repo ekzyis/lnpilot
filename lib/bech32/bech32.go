@@ -15,7 +15,8 @@ const (
 )
 
 var (
-	ErrInvalidChecksum = errors.New("invalid checksum")
+	ErrInvalidChecksum       = errors.New("invalid checksum")
+	ErrInvalidSeparatorIndex = errors.New("invalid separator index")
 )
 
 // ======================
@@ -202,10 +203,17 @@ func DecodeNoLimit(bech string) (string, []byte, error) {
 // errors.New() and returns them. These errors can be more conveniently used
 // with errors.Is(). If the error is unknown, it is returned unchanged.
 func wrapLibError(err error) error {
+	// TODO: don't lose information contained in original error messages
+
 	if errors.As(err, &bech32.ErrInvalidChecksum{}) {
-		// TODO: don't lose information contained in original error message
 		return ErrInvalidChecksum
 	}
+
+	var sepErr bech32.ErrInvalidSeparatorIndex
+	if errors.As(err, &sepErr) {
+		return ErrInvalidSeparatorIndex
+	}
+
 	return err
 }
 
