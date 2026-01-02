@@ -1,6 +1,7 @@
 package bech32
 
 import (
+	"errors"
 	"fmt"
 	"math/bits"
 
@@ -11,6 +12,10 @@ const (
 	Version0       = bech32.Version0
 	VersionM       = bech32.VersionM
 	VersionUnknown = bech32.VersionUnknown
+)
+
+var (
+	ErrInvalidChecksum = errors.New("invalid checksum")
 )
 
 // ======================
@@ -167,22 +172,41 @@ func (e UintBase32Decoder) DecodeBase32() (uint, error) {
 }
 
 // Decode decodes a bech32 encoded string, returning the human-readable part and
-// the data part excluding the checksum.
+// the data part excluding the checksum. It validates the checksum.
 func Decode(bech string) (string, []byte, error) {
-	return bech32.Decode(bech)
+	hrp, data, err := bech32.Decode(bech)
+	return hrp, data, wrapLibError(err)
 }
 
 // DecodeGeneric decodes a bech32 encoded string, returning the human-readable
-// part, the data part excluding the checksum, and the version.
+// part, the data part excluding the checksum, and the version. It validates the
+// checksum.
 func DecodeGeneric(bech string) (string, []byte, bech32.Version, error) {
-	return bech32.DecodeGeneric(bech)
+	hrp, data, version, err := bech32.DecodeGeneric(bech)
+	return hrp, data, version, wrapLibError(err)
 }
 
 // DecodeNoLimit decodes a bech32 encoded string, returning the human-readable
-// part and the data part excluding the checksum. It does not validate against
-// the BIP-173 maximum length allowed for bech32 strings.
+// part and the data part excluding the checksum. It validates the checksum, but
+// does not validate against the BIP-173 maximum length allowed for bech32
+// strings.
 func DecodeNoLimit(bech string) (string, []byte, error) {
-	return bech32.DecodeNoLimit(bech)
+	hrp, data, err := bech32.DecodeNoLimit(bech)
+	if err != nil {
+		return "", nil, wrapLibError(err)
+	}
+	return hrp, data, wrapLibError(err)
+}
+
+// wrapLibError returns bech32 library error structs as errors created by
+// errors.New() and returns them. These errors can be more conveniently used
+// with errors.Is(). If the error is unknown, it is returned unchanged.
+func wrapLibError(err error) error {
+	if errors.As(err, &bech32.ErrInvalidChecksum{}) {
+		// TODO: don't lose information contained in original error message
+		return ErrInvalidChecksum
+	}
+	return err
 }
 
 // ===================

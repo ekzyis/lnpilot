@@ -427,8 +427,6 @@ func NewUintBolt11Decoder[T constraints.Unsigned](num *T) Bolt11Decoder {
 // DecodePaymentRequest decodes the bech32-encoded payment request into a
 // PaymentRequest struct.
 func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
-	// TODO: verify checksum if DecodeNoLimit doesn't already do it
-
 	hrp, dataBase32, err := bech32.DecodeNoLimit(encoded)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode payment request: %w", err)
