@@ -704,3 +704,11 @@ func TestPaymentRequest_Invalid_Spec_021(t *testing.T) {
 	_, err := DecodePaymentRequest(encoded)
 	assert.ErrorIs(err, ErrInvalidSignature)
 }
+
+func TestPaymentRequest_Invalid_Spec_022(t *testing.T) {
+	// String is too short.
+	assert := assert.New(t)
+	encoded := "lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6na6hlh"
+	_, err := DecodePaymentRequest(encoded)
+	assert.ErrorIs(err, bech32.ErrInvalidLength)
+}

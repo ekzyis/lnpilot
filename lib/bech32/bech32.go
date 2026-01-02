@@ -18,6 +18,7 @@ var (
 	ErrInvalidChecksum       = errors.New("invalid checksum")
 	ErrInvalidSeparatorIndex = errors.New("invalid separator index")
 	ErrMixedCase             = errors.New("mixed case")
+	ErrInvalidLength         = errors.New("invalid length")
 )
 
 // ======================
@@ -217,6 +218,11 @@ func wrapLibError(err error) error {
 
 	if errors.As(err, &bech32.ErrMixedCase{}) {
 		return ErrMixedCase
+	}
+
+	var lenErr bech32.ErrInvalidLength
+	if errors.As(err, &lenErr) {
+		return ErrInvalidLength
 	}
 
 	return err

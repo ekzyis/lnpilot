@@ -435,8 +435,9 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 
 	// the data part must be the same length as the bech32 string without the
 	// hrp, bech32 separator, and checksum
-	if len(dataBase32) != len(encoded)-len(hrp)-1-6 {
-		return nil, fmt.Errorf("unexpected length of decoded bech32 data part: expected %d, got %d", len(encoded)-len(hrp)-1-6, len(dataBase32))
+	checksumLength := 6
+	if len(dataBase32) != len(encoded)-len(hrp)-1-checksumLength {
+		return nil, fmt.Errorf("unexpected length of decoded bech32 data part: expected %d, got %d", len(encoded)-len(hrp)-1-checksumLength, len(dataBase32))
 	}
 
 	pr := PaymentRequest{}
@@ -453,8 +454,13 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 
 	// 64 bytes R||S + 1 byte recovery id in base256
 	// => 64 * 8 / 5 = 104 bytes in base32
+	timestampLengthBase32 := 7
 	sigLengthBase32 := 104
-	tfBase32 := dataBase32[7 : len(dataBase32)-sigLengthBase32]
+	if len(dataBase32)-sigLengthBase32 <= timestampLengthBase32 {
+		return nil, bech32.ErrInvalidLength
+	}
+	tfBase32 := dataBase32[timestampLengthBase32 : len(dataBase32)-sigLengthBase32]
+
 	err = pr.decodeTaggedFields(tfBase32)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode tagged fields: %w", err)
