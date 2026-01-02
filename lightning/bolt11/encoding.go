@@ -23,6 +23,7 @@ var (
 	errFieldDataNotFound = errors.New("field data not found")
 	errUnknownFieldType  = errors.New("unknown field type")
 	ErrInvalidSignature  = errors.New("invalid signature")
+	ErrInvalidHRP        = errors.New("invalid hrp")
 )
 
 // ======================
@@ -444,7 +445,7 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 
 	err = pr.decodeHumanReadablePart(hrp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode hrp: %w", err)
+		return nil, err
 	}
 
 	err = pr.decodeTimestamp(dataBase32[0:7])
@@ -495,20 +496,26 @@ func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
 		err        error
 	)
 
-	re := regexp.MustCompile(`^(?P<prefix>[a-zA-Z]+)((?P<amount>\d.*)(?P<multiplier>[munp]))?$`)
+	re := regexp.MustCompile(`^(?P<prefix>[a-zA-Z]+)(?:(?P<amount>\d.*)(?P<multiplier>[munp]))?$`)
 	matches := findNamedMatches(re, hrp)
+
+	if len(matches) != 1 && len(matches) != 3 {
+		// must always match prefix, amount and multiplier are optional but must
+		// match together
+		return fmt.Errorf("%w: invalid format: %s", ErrInvalidHRP, hrp)
+	}
 
 	for key, value := range matches {
 		switch key {
 		case "prefix":
 			network, err = lntypes.DecodeNetworkPrefix(value)
 			if err != nil {
-				return fmt.Errorf("failed to decode network prefix: %w", err)
+				return fmt.Errorf("%w: failed to decode network prefix: %w", ErrInvalidHRP, err)
 			}
 		case "amount":
 			numAmt, err := strconv.ParseUint(value, 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to parse amount: %w", err)
+				return fmt.Errorf("%w: failed to parse amount: %w", ErrInvalidHRP, err)
 			}
 			amt = lntypes.Bitcoin(numAmt)
 		case "multiplier":
