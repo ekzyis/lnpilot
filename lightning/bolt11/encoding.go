@@ -529,6 +529,10 @@ func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
 		return nil
 	}
 
+	if multiplier == lntypes.MultiplierPico && amt%10 != 0 {
+		return fmt.Errorf("%w: invalid sub-millisatoshi amount: %d%s", ErrInvalidHRP, amt, multiplier)
+	}
+
 	var picoBitcoins uint64
 	switch multiplier {
 	case lntypes.MultiplierPico:
