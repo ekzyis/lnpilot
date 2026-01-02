@@ -7,9 +7,11 @@ import (
 	"github.com/btcsuite/btcd/btcutil/bech32"
 )
 
-var Version0 = bech32.Version0
-var VersionM = bech32.VersionM
-var VersionUnknown = bech32.VersionUnknown
+const (
+	Version0       = bech32.Version0
+	VersionM       = bech32.VersionM
+	VersionUnknown = bech32.VersionUnknown
+)
 
 // ======================
 // === encoding stuff ===
