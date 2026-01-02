@@ -76,7 +76,7 @@ func TestPaymentRequest_NewPaymentRequest_Defaults(t *testing.T) {
 	assert.Equalf(3600*time.Second, pr.Expiry, "expiry should be 1 hour")
 	assert.Falsef(pr.PaymentHash.IsZero(), "payment hash should be set")
 	assert.Falsef(pr.PaymentSecret.IsZero(), "payment secret should be set")
-	assert.Truef(pr.Description == "", "description should be empty")
+	assert.Truef(pr.Description != "", "description should be set")
 	assert.Truef(pr.DescriptionHash.IsZero(), "description hash should be zero")
 	assert.Truef(pr.FallbackAddress == "", "fallback address should be empty")
 
@@ -147,6 +147,15 @@ func TestPaymentRequest_NewPaymentRequest_Defaults(t *testing.T) {
 			minFinalCLTVExpiryDeltaBech32 := toBech32(fieldTypeC, NewVarUintBolt11Encoder(uint(pr.MinFinalCLTVExpiryDelta)))
 			assert.Truef(strings.HasPrefix(*encoded, minFinalCLTVExpiryDeltaBech32), "min_final_cltv_expiry_delta bech32 mismatch")
 			*encoded = strings.TrimPrefix(*encoded, minFinalCLTVExpiryDeltaBech32)
+			return true
+		},
+		func(encoded *string) bool {
+			if (*encoded)[0] != 'd' {
+				return false
+			}
+			descriptionBech32 := toBech32(fieldTypeD, NewStringBolt11Encoder(pr.Description))
+			assert.Truef(strings.HasPrefix(*encoded, descriptionBech32), "description bech32 mismatch")
+			*encoded = strings.TrimPrefix(*encoded, descriptionBech32)
 			return true
 		},
 		func(encoded *string) bool {

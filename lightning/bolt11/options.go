@@ -76,8 +76,15 @@ func WithDescription(description string) func(*PaymentRequest) {
 	}
 }
 
+func WithDefaultDescription() func(*PaymentRequest) {
+	return WithDescription("lntutor")
+}
+
 func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
+		pr.Description = ""
+		pr.taggedFields = remove(pr.taggedFields, fieldTypeD)
+
 		pr.DescriptionHash = lntypes.Hash(descriptionHash)
 		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeH)
 	}

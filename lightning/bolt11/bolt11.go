@@ -30,6 +30,7 @@ func NewPaymentRequest(msats uint64, options ...func(*PaymentRequest)) *PaymentR
 			WithRandomPaymentHash(),
 			WithDefaultExpiry(),
 			WithDefaultMinFinalCLTVExpiryDelta(),
+			WithDefaultDescription(),
 		},
 		options...,
 	)
