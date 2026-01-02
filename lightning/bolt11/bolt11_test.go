@@ -10,6 +10,7 @@ import (
 
 	"github.com/ekzyis/lntutor/lib/bech32"
 	"github.com/ekzyis/lntutor/lib/secp256k1"
+	"github.com/ekzyis/lntutor/lightning/bolt09"
 	"github.com/ekzyis/lntutor/lightning/lntypes"
 	"github.com/stretchr/testify/assert"
 )
@@ -658,4 +659,14 @@ func TestPaymentRequest_EncodeDecode_Spec_016(t *testing.T) {
 	decoded, err := DecodePaymentRequest(expected)
 	assert.NoError(err)
 	assert.Equal(pr, decoded)
+}
+
+func TestPaymentRequest_Invalid_Spec_017(t *testing.T) {
+	// Same, but adding invalid unknown feature 100
+
+	assert := assert.New(t)
+
+	encoded := "lnbc25m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5vdhkven9v5sxyetpdeessp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9q4psqqqqqqqqqqqqqqqqsgqtqyx5vggfcsll4wu246hz02kp85x4katwsk9639we5n5yngc3yhqkm35jnjw4len8vrnqnf5ejh0mzj9n3vz2px97evektfm2l6wqccp3y7372"
+	_, err := DecodePaymentRequest(encoded)
+	assert.ErrorIs(err, bolt09.ErrUnknownRequiredFeatureBit)
 }

@@ -1,6 +1,10 @@
 package bolt09
 
-import "slices"
+import (
+	"errors"
+	"fmt"
+	"slices"
+)
 
 // Feature bits aren't implemented as bitmasks, because the maximum feature bit
 // can be 5114. They are limited by the 10 bits for data_length in the tagged
@@ -65,6 +69,10 @@ const (
 	SimpleCloseOptional           FeatureBit = 61
 )
 
+var (
+	ErrUnknownRequiredFeatureBit = errors.New("unknown required feature bit")
+)
+
 func NewFeatureVector(bits ...FeatureBit) *FeatureVector {
 	fv := &FeatureVector{features: make(map[FeatureBit]struct{})}
 	for _, bit := range bits {
@@ -92,10 +100,14 @@ func (fv *FeatureVector) Bytes() []byte {
 }
 
 // EncodeBolt11 returns the bytes of the feature vector in base32 encoding,
-// big-endian order.
+// big-endian order. It will throw an error if the "it's okay to be odd"-rule
+// is violated.
 func (fv *FeatureVector) EncodeBolt11() ([]byte, error) {
 	b := make([]byte, fv.maxBit/5+1)
 	for bit := range fv.features {
+		if bit.IsUnknown() && bit.IsRequired() {
+			return nil, fmt.Errorf("%w: %v", ErrUnknownRequiredFeatureBit, bit)
+		}
 		index := (len(b) - 1) - int(bit)/5
 		b[index] |= 1 << (bit % 5)
 	}
@@ -114,7 +126,11 @@ func (fv *FeatureVector) DecodeBolt11(data []byte) error {
 	for i, b := range data {
 		for j := 0; j < 5; j++ {
 			if b&(1<<j) != 0 {
-				bits = append(bits, FeatureBit(i*5+j))
+				bit := FeatureBit(i*5 + j)
+				if bit.IsUnknown() && bit.IsRequired() {
+					return fmt.Errorf("%w: %v", ErrUnknownRequiredFeatureBit, bit)
+				}
+				bits = append(bits, bit)
 			}
 		}
 	}
@@ -124,4 +140,14 @@ func (fv *FeatureVector) DecodeBolt11(data []byte) error {
 	*fv = *NewFeatureVector(bits...)
 
 	return nil
+}
+
+// IsUnknown returns true if the feature bit is unknown to the bolt09 spec.
+func (b *FeatureBit) IsUnknown() bool {
+	return *b >= 62
+}
+
+// IsRequired returns true if the feature bit is required, which means it's an even bit.
+func (b *FeatureBit) IsRequired() bool {
+	return *b%2 == 0
 }
