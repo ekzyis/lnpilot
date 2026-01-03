@@ -9,4 +9,24 @@
 
 toy lightning implementation | `vimtutor` but for lightning
 
-See [NOTES.md](./NOTES.md) for more information.
+## How to Run
+
+```
+$ git clone git@github.com:ekzyis/lntutor
+$ cd lntutor
+$ go run .
+```
+
+You should then see this screen:
+
+![](./img/splash.png)
+
+_The menu doesn't do anything yet, that's all there is for now._
+
+## What is this??
+
+I'm not sure yet, but [NOTES.md](./NOTES.md) should provide more information.
+
+---
+
+<sub>last updated: Jan 3, 2026</sub>
