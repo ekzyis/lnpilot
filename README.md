@@ -11,6 +11,10 @@ toy lightning implementation |
 [`vimtutor`](https://vimschool.netlify.app/introduction/vimtutor/) but for
 lightning
 
+## What is this??
+
+I'm not sure yet, but [NOTES.md](./NOTES.md) should provide more information.
+
 ## How to Run
 
 ```
@@ -24,10 +28,6 @@ You should then see this screen:
 ![](./img/splash.png)
 
 _The menu doesn't do anything yet, that's all there is for now._
-
-## What is this??
-
-I'm not sure yet, but [NOTES.md](./NOTES.md) should provide more information.
 
 ---
 
