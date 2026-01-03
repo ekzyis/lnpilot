@@ -7,7 +7,7 @@
 /_/_//_/\__/\_,_/\__/\___/_/
 ```
 
-toy lightning implementation | `vimtutor` but for lightning
+toy lightning implementation | [`vimtutor`](https://vimschool.netlify.app/introduction/vimtutor/) but for lightning
 
 ## How to Run
 
