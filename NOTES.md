@@ -13,7 +13,7 @@ No channels, no gossip, no routing information.
 
 ## Random Notes
 
-* inspired by `vimtutor`, [Saving Satoshi](https://savingsatoshi.com/) and [VIM adventures](https://vim-adventures.com/)
+* inspired by [`vimtutor`](https://vimschool.netlify.app/introduction/vimtutor/), [Saving Satoshi](https://savingsatoshi.com/) and [VIM adventures](https://vim-adventures.com/)
 * alternative name was lnpilot
 
 The idea was to make running a lightning node feel like flying a plane with only analog controls, because **fun + high interactivity lead to better results in education**. Since one of my motivations for this project is also to find security vulnerabilities in lightning—and for that, I first need to understand the protocol very well—I also wanted to connect it to aviation safety and the [second season of _The Rehearsal_](https://www.youtube.com/watch?v=6CaHP5P4wUc) in some way. Maybe I will consider this idea again later, but it sounds too ambitious and abstract for now.
