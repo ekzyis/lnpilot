@@ -29,7 +29,7 @@ You should then see this screen:
 
 _The menu doesn't do anything yet, that's all there is for now._
 
-To run the tests, run `make test` or `go test -v ./...` if you don't have `make`.
+To run the tests, run `make test` or `go test ./...` if you don't have `make`.
 
 ---
 
