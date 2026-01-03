@@ -2,7 +2,7 @@
 
 ![](./img/joy.jpg)
 
-### 🚧 bolt11
+### ✅ bolt11
 
 The first milestone is to create a valid bolt11 payment request that a fully
 fledged lightning node could pay if:
@@ -11,6 +11,39 @@ fledged lightning node could pay if:
 - the recipient node would actually know what to do with the incoming payment
 
 No channels, no gossip, no routing information.
+
+### 🚧 bolt11 chapter
+
+The second milestone is about a chapter in the TUI that explains bolt11 payment
+requests. I want it to be very detailed; ideally, it should cover everything
+I've learned myself, including, but not necessarily limited to:
+
+* bech32 encoding
+  - hrp
+    * network prefix
+    * amount
+  - data part
+    * timestamp
+    * tagged fields
+    * signature
+  - how to convert bits from 8-bit to 5-bit groups
+  - how 5-bit groups are mapped to characters
+  - bip173 vs bolt11 w/o limit
+
+* tagged fields
+  - elements
+    * `type` (5 bits)
+    * `data_length` (10 bits, big-endian)
+    * `data` (`data_length` x 5)
+  - big-endian vs little-endian
+  - which types exist? what is their purpose?
+  - which types are required/optional/repeatable?
+* signature
+  - secp256k1
+  - high-S vs low-S
+
+Additionally, expectations for the following chapters should be set. It's the
+first time I'm providing a TUI and a learning experience.
 
 ## Random Notes
 
