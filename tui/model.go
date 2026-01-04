@@ -3,13 +3,11 @@ package tui
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	spinner  spinner.Model
 	screen   screen
 	selected int
 }
@@ -20,14 +18,11 @@ type screen struct {
 }
 
 func initialModel() model {
-	s := spinner.New()
-	s.Spinner = spinner.MiniDot
-	s.Style = lipgloss.NewStyle().Foreground(lightningColor)
-	return model{spinner: s}
+	return model{}
 }
 
 func (m model) Init() tea.Cmd {
-	return m.spinner.Tick
+	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -46,19 +41,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 	default:
-		return m.updateSpinner(msg)
+		return m, nil
 	}
 }
 
 func (m *model) updateScreen(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	m.screen = screen{width: msg.Width, height: msg.Height}
 	return m, nil
-}
-
-func (m *model) updateSpinner(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	m.spinner, cmd = m.spinner.Update(msg)
-	return m, cmd
 }
 
 func (m *model) quit() (tea.Model, tea.Cmd) {
