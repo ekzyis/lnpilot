@@ -1,4 +1,4 @@
-package tui
+package log
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ func init() {
 	}
 }
 
-func logf(format string, a ...any) {
+func Logf(format string, a ...any) {
 	if f != nil {
 		fmt.Fprintf(f, format, a...)
 	}
