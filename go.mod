@@ -1,4 +1,4 @@
-module github.com/ekzyis/lntutor
+module github.com/ekzyis/lnpilot
 
 go 1.24.4
 

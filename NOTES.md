@@ -1,7 +1,5 @@
 ## Milestones
 
-![](./img/joy.jpg)
-
 ### ✅ bolt11
 
 The first milestone is to create a valid bolt11 payment request that a fully
@@ -12,9 +10,9 @@ fledged lightning node could pay if:
 
 No channels, no gossip, no routing information.
 
-### 🚧 bolt11 chapter
+### 🚧 bolt11 tool
 
-The second milestone is about a chapter in the TUI that explains bolt11 payment
+The second milestone is about a tool in the TUI that explains bolt11 payment
 requests. I want it to be very detailed; ideally, it should cover everything
 I've learned myself, including, but not necessarily limited to:
 
@@ -42,15 +40,15 @@ I've learned myself, including, but not necessarily limited to:
   - secp256k1
   - high-S vs low-S
 
-Additionally, expectations for the following chapters should be set. It's the
-first time I'm providing a TUI and a learning experience.
+Additionally, expectations for the following tools should be set. It's the first
+time I'm providing a TUI to learn about lightning.
 
 ## Random Notes
 
 * inspired by
-  [`vimtutor`](https://vimschool.netlify.app/introduction/vimtutor/), [Saving
-  Satoshi](https://savingsatoshi.com/) and [VIM
-  adventures](https://vim-adventures.com/)
+  [vimtutor](https://vimschool.netlify.app/introduction/vimtutor/), [Saving
+  Satoshi](https://savingsatoshi.com/), [learn me a
+  bitcoin](https://learnmeabitcoin.com/)
 * alternative name was lnpilot
 
 The idea was to make running a lightning node feel like flying a plane with only
@@ -72,6 +70,20 @@ ambitious and abstract for now.
   with the lightning network
   * [_The Secret Behind Weirdly Addictive
     Apps_](https://www.youtube.com/watch?v=Du2lkZ_cux8)
+
+Update Jan 8, 2026:
+
+I don't want to do a bunch of stuff around the thing I actually want to do:
+implement lightning.
+
+I care about educating people, but I don't want to think about chapters, how to
+gamify it, etc. It wouldn't be something I'm building for myself, because while
+building it, I wouldn't need it myself anymore.
+
+Instead, I want to have a TUI that exposes all the things about lightning. I
+want to have tools, not chapters.
+
+I want to build lnpilot, not lntutor.
 
 ## Dependencies
 

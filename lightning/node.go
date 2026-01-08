@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"github.com/ekzyis/lntutor/lightning/bolt11"
-	"github.com/ekzyis/lntutor/lightning/lntypes"
+	"github.com/ekzyis/lnpilot/lightning/bolt11"
+	"github.com/ekzyis/lnpilot/lightning/lntypes"
 )
 
 type Node struct {

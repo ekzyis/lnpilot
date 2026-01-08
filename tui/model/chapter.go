@@ -6,37 +6,37 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type chapterModel struct {
+type toolsModel struct {
 	screen
-	chapters *chapters
+	tools    *tools
 	selected int
 }
 
-type chapters struct {
+type tools struct {
 	listModel list.Model
 	style     lipgloss.Style
 }
 
-type chapter struct {
+type tool struct {
 	title, desc string
 }
 
-var _ tea.Model = (*chapterModel)(nil)
+var _ tea.Model = (*toolsModel)(nil)
 
-func (i chapter) Title() string       { return i.title }
-func (i chapter) Description() string { return i.desc }
-func (i chapter) FilterValue() string { return i.title }
+func (i tool) Title() string       { return i.title }
+func (i tool) Description() string { return i.desc }
+func (i tool) FilterValue() string { return i.title }
 
-func newChapterModel(s screen) (tea.Model, tea.Cmd) {
-	m := &chapterModel{
+func newToolsModel(s screen) (tea.Model, tea.Cmd) {
+	m := &toolsModel{
 		screen:   s,
 		selected: 0,
-		chapters: newChapters(s),
+		tools:    newTools(s),
 	}
 	return m, m.Init()
 }
 
-func newChapters(s screen) *chapters {
+func newTools(s screen) *tools {
 	delegate := list.NewDefaultDelegate()
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.
 		BorderForeground(lightningColor).
@@ -47,19 +47,15 @@ func newChapters(s screen) *chapters {
 
 	listModel := list.New(
 		[]list.Item{
-			chapter{
+			tool{
 				title: "bolt11",
-				desc:  "everything about lightning invoices",
-			},
-			chapter{
-				title: "secp256k1",
-				desc:  "learn about digital signatures with the secp256k1 curve",
+				desc:  "everything about payment requests",
 			},
 		},
 		delegate, s.width, s.height,
 	)
 
-	listModel.Title = "Chapters"
+	listModel.Title = "Tools"
 	listModel.Styles.Title = listModel.Styles.Title.
 		Background(lipgloss.NoColor{}).
 		Foreground(lipgloss.NoColor{}).
@@ -72,23 +68,23 @@ func newChapters(s screen) *chapters {
 	// add margin around list
 	style := lipgloss.NewStyle().Margin(1, 2)
 
-	return &chapters{
+	return &tools{
 		listModel: listModel,
 		style:     style,
 	}
 }
 
-func (m *chapterModel) Init() tea.Cmd {
+func (m *toolsModel) Init() tea.Cmd {
 	return func() tea.Msg {
 		return tea.WindowSizeMsg{Width: m.screen.width, Height: m.screen.height}
 	}
 }
 
-func (m *chapterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *toolsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.screen.update(msg)
-		m.chapters.setSize(msg)
+		m.tools.setSize(msg)
 	case tea.KeyMsg:
 		// only return here if we found a command to execute since the list will
 		// handle the rest
@@ -98,15 +94,15 @@ func (m *chapterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
-	m.chapters.listModel, cmd = m.chapters.listModel.Update(msg)
+	m.tools.listModel, cmd = m.tools.listModel.Update(msg)
 	return m, cmd
 }
 
-func (m *chapterModel) View() string {
-	return m.chapters.style.Render(m.chapters.listModel.View())
+func (m *toolsModel) View() string {
+	return m.tools.style.Render(m.tools.listModel.View())
 }
 
-func (m *chapterModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *toolsModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg.String() {
 	case "up", "k":
@@ -121,7 +117,7 @@ func (m *chapterModel) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (c *chapters) setSize(msg tea.WindowSizeMsg) {
+func (c *tools) setSize(msg tea.WindowSizeMsg) {
 	x, y := c.style.GetFrameSize()
 	c.listModel.SetSize(msg.Width-x, msg.Height-y)
 }

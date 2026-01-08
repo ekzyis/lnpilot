@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ekzyis/lntutor/lib/bech32"
-	"github.com/ekzyis/lntutor/lib/secp256k1"
-	"github.com/ekzyis/lntutor/lightning/bolt09"
-	"github.com/ekzyis/lntutor/lightning/lntypes"
+	"github.com/ekzyis/lnpilot/lib/bech32"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
+	"github.com/ekzyis/lnpilot/lightning/bolt09"
+	"github.com/ekzyis/lnpilot/lightning/lntypes"
 	"github.com/stretchr/testify/assert"
 )
 

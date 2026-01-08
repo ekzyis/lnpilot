@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ekzyis/lntutor/lib/bech32"
-	"github.com/ekzyis/lntutor/lib/bitcoin"
-	"github.com/ekzyis/lntutor/lib/secp256k1"
-	"github.com/ekzyis/lntutor/lightning/bolt09"
-	"github.com/ekzyis/lntutor/lightning/lntypes"
+	"github.com/ekzyis/lnpilot/lib/bech32"
+	"github.com/ekzyis/lnpilot/lib/bitcoin"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
+	"github.com/ekzyis/lnpilot/lightning/bolt09"
+	"github.com/ekzyis/lnpilot/lightning/lntypes"
 	"golang.org/x/exp/constraints"
 )
 

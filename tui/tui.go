@@ -2,7 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/ekzyis/lntutor/tui/model"
+	"github.com/ekzyis/lnpilot/tui/model"
 )
 
 func NewProgram() *tea.Program {

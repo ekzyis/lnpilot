@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ekzyis/lntutor/tui"
+	"github.com/ekzyis/lnpilot/tui"
 )
 
 func main() {

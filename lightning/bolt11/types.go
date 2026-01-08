@@ -3,8 +3,8 @@ package bolt11
 import (
 	"time"
 
-	"github.com/ekzyis/lntutor/lightning/bolt09"
-	"github.com/ekzyis/lntutor/lightning/lntypes"
+	"github.com/ekzyis/lnpilot/lightning/bolt09"
+	"github.com/ekzyis/lnpilot/lightning/lntypes"
 )
 
 type PaymentRequest struct {

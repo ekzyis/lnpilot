@@ -119,7 +119,7 @@ func (m *startModel) handleEnter() (tea.Model, tea.Cmd) {
 }
 
 func (m *startModel) newNode() (tea.Model, tea.Cmd) {
-	return newChapterModel(m.screen)
+	return newToolsModel(m.screen)
 }
 
 func (m *startModel) loadNode() (tea.Model, tea.Cmd) {

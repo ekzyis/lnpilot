@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ekzyis/lntutor/lib/bech32"
+	"github.com/ekzyis/lnpilot/lib/bech32"
 )
 
 const (
