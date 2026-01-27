@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/crypto v0.47.0
 	golang.org/x/exp v0.0.0-20220909182711-5c715a9e8561
 )
 
@@ -33,7 +33,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.3.8 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

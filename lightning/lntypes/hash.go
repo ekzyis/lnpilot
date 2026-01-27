@@ -30,3 +30,5 @@ type Preimage [32]byte
 func (p Preimage) Hash() Hash {
 	return Hash(sha256.Sum256(p[:]))
 }
+
+type HMAC [32]byte
