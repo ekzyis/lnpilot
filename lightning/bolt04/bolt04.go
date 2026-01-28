@@ -195,6 +195,12 @@ func xor(a, b []byte) []byte {
 	for i := 0; i < min(len(a), len(b)); i++ {
 		output[i] = a[i] ^ b[i]
 	}
+	// copy remaining bytes from the longer slice
+	if len(a) > len(b) {
+		copy(output[len(b):], a[len(b):])
+	} else if len(b) > len(a) {
+		copy(output[len(a):], b[len(a):])
+	}
 	return output
 }
 
