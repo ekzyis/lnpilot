@@ -505,7 +505,7 @@ func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
 		err        error
 	)
 
-	re := regexp.MustCompile(`^(?P<prefix>[a-zA-Z]+)(?:(?P<amount>\d.*)(?P<multiplier>[munp]))?$`)
+	re := regexp.MustCompile(`^(?P<prefix>[a-zA-Z]+)(?:(?P<amount>\d+)(?P<multiplier>[munp]))?$`)
 	matches := findNamedMatches(re, hrp)
 
 	if len(matches) != 1 && len(matches) != 3 {
