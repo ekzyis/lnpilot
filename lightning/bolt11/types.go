@@ -3,6 +3,7 @@ package bolt11
 import (
 	"time"
 
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
 	"github.com/ekzyis/lnpilot/lightning/bolt09"
 	"github.com/ekzyis/lnpilot/lightning/lntypes"
 )
@@ -13,6 +14,7 @@ type PaymentRequest struct {
 	Timestamp   time.Time
 	Expiry      time.Duration
 	PaymentHash lntypes.Hash
+	PublicKey   *secp256k1.PublicKey
 
 	// PaymentSecret makes sure the recipient can tell if the onion payload was
 	// constructed by the sender. If it's not included, the last hop can steal
@@ -77,6 +79,8 @@ const (
 	fieldTypeC TaggedFieldType = 24
 	// fieldTypeM is the field containing the payment metadata.
 	fieldTypeM TaggedFieldType = 27
+	// fieldTypeN is the compressed public key of the payee node.
+	fieldTypeN TaggedFieldType = 19
 
 	// data_length is limited by 10 bits, so we can only fit 5 x 2^10 bits
 	// or 640 bytes of data in a single field.

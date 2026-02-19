@@ -282,6 +282,11 @@ func (pr *PaymentRequest) getTaggedFieldEncoder(fieldType TaggedFieldType) (Bolt
 			return NewBytesBolt11Encoder(pr.PaymentMetadata), nil
 		}
 		return nil, errFieldDataNotFound
+	case fieldTypeN:
+		if pr.PublicKey != nil {
+			return NewBytesBolt11Encoder(pr.PublicKey.SerializeCompressed()), nil
+		}
+		return nil, errFieldDataNotFound
 	}
 	return nil, errUnknownFieldType
 }
@@ -301,6 +306,8 @@ func encodeTaggedField(buf *bytes.Buffer, fieldType TaggedFieldType, encoder Bol
 		switch fieldType {
 		case fieldTypeP, fieldTypeS, fieldTypeH:
 			tf.DataLength = 52
+		case fieldTypeN:
+			tf.DataLength = 53
 		default:
 			tf.DataLength = uint16(len(dataBolt11))
 		}
@@ -347,6 +354,10 @@ type TimeDurationBolt11Decoder struct {
 
 type BytesBolt11Decoder struct {
 	bytes *[]byte
+}
+
+type PublicKeyBolt11Decoder struct {
+	pubKey **secp256k1.PublicKey
 }
 
 type RoutingHintBolt11Decoder struct {
@@ -397,6 +408,18 @@ func (d BytesBolt11Decoder) DecodeBolt11(data []byte) error {
 	return nil
 }
 
+func (d PublicKeyBolt11Decoder) DecodeBolt11(data []byte) error {
+	decoded, err := bech32.NewBytesBase32Decoder(data).DecodeBase32()
+	if err != nil {
+		return err
+	}
+	*d.pubKey, err = secp256k1.ParsePubKey(decoded)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d UintBolt11Decoder[T]) DecodeBolt11(data []byte) error {
 	num, err := bech32.NewUintBase32Decoder(data).DecodeBase32()
 	if err != nil {
@@ -420,6 +443,10 @@ func NewTimeDurationBolt11Decoder(duration *time.Duration) Bolt11Decoder {
 
 func NewBytesBolt11Decoder(bytes *[]byte) Bolt11Decoder {
 	return BytesBolt11Decoder{bytes: bytes}
+}
+
+func NewPublicKeyBolt11Decoder(pubKey **secp256k1.PublicKey) Bolt11Decoder {
+	return PublicKeyBolt11Decoder{pubKey: pubKey}
 }
 
 func NewRoutingHintBolt11Decoder(routingHint *lntypes.RoutingHint) Bolt11Decoder {
@@ -483,7 +510,13 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 	}
 
 	msg := append([]byte(hrp), tfBase32...)
+	// TODO: this always performs public key recovery, but we must use `n` if provided
 	if !sig.Verify(msg) {
+		return nil, ErrInvalidSignature
+	}
+
+	// signatures must be low-S if `n` is provided
+	if pr.PublicKey != nil && sig.IsHighS() {
 		return nil, ErrInvalidSignature
 	}
 
@@ -670,6 +703,8 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 		return NewRoutingHintBolt11Decoder(hint), nil
 	case fieldTypeC:
 		return NewUintBolt11Decoder(&pr.MinFinalCLTVExpiryDelta), nil
+	case fieldTypeN:
+		return NewPublicKeyBolt11Decoder(&pr.PublicKey), nil
 	}
 
 	return nil, errUnknownFieldType

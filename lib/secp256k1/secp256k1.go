@@ -149,3 +149,9 @@ func (sig *CompactECDSASignature) NegateS() *CompactECDSASignature {
 		S:          [32]byte(s.Bytes()),
 	}
 }
+
+func (sig *CompactECDSASignature) IsHighS() bool {
+	s := new(secp256k1.ModNScalar)
+	s.SetBytes(&sig.S)
+	return s.IsOverHalfOrder()
+}
