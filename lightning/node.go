@@ -3,7 +3,7 @@ package lightning
 import (
 	"log"
 
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
 	"github.com/ekzyis/lnpilot/lightning/bolt11"
 	"github.com/ekzyis/lnpilot/lightning/lntypes"
 )

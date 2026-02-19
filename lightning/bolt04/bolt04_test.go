@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/crypto/chacha20"
 
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
 	"github.com/ekzyis/lnpilot/lightning/lntypes"
 )
 
@@ -207,6 +207,7 @@ func xor(a, b []byte) []byte {
 func ecdh(privKey *secp256k1.PrivateKey, pubKey *secp256k1.PublicKey) [32]byte {
 	// Unfortunately, secp256k1.GenerateSharedSecret() only returns X, not the
 	// compressed public key, so we perform ECDH ourselves here.
+	// TODO: provide helper function for this in lib/secp256k1
 	var point, result secp256k1.JacobianPoint
 	pubKey.AsJacobian(&point)
 	secp256k1.ScalarMultNonConst(&privKey.Key, &point, &result)

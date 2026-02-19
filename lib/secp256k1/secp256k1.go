@@ -8,6 +8,12 @@ import (
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 )
 
+type PrivateKey = secp256k1.PrivateKey
+type PublicKey = secp256k1.PublicKey
+type JacobianPoint = secp256k1.JacobianPoint
+type ModNScalar = secp256k1.ModNScalar
+type FieldVal = secp256k1.FieldVal
+
 // CompactECDSASignature is a compact ECDSA signature over secp256k1.
 type CompactECDSASignature struct {
 	RecoveryId byte
@@ -49,6 +55,26 @@ func NewPrivateKeySigner(bytes []byte) (Signer, error) {
 	return &PrivateKeySigner{
 		privateKey: secp256k1.PrivKeyFromBytes(bytes),
 	}, nil
+}
+
+func PrivKeyFromBytes(privKeyBytes []byte) *PrivateKey {
+	return secp256k1.PrivKeyFromBytes(privKeyBytes)
+}
+
+func GeneratePrivateKey() (*PrivateKey, error) {
+	return secp256k1.GeneratePrivateKey()
+}
+
+func NewPublicKey(x *FieldVal, y *FieldVal) *PublicKey {
+	return secp256k1.NewPublicKey(x, y)
+}
+
+func ParsePubKey(serialized []byte) (*PublicKey, error) {
+	return secp256k1.ParsePubKey(serialized)
+}
+
+func ScalarMultNonConst(k *ModNScalar, point *JacobianPoint, result *JacobianPoint) {
+	secp256k1.ScalarMultNonConst(k, point, result)
 }
 
 // CompactECDSASign returns a deterministic, compact, low-S ECDSA signature over

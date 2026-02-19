@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ekzyis/lnpilot/lib/base58"
 	"github.com/ekzyis/lnpilot/lib/bech32"
 	liberr "github.com/ekzyis/lnpilot/lib/error"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
 	"github.com/ekzyis/lnpilot/lightning/lntypes"
 	"golang.org/x/crypto/ripemd160"
 )

@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+	"github.com/ekzyis/lnpilot/lib/secp256k1"
 )
 
 type NodePrivateKey struct {
