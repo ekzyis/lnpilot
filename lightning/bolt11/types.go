@@ -28,11 +28,6 @@ type PaymentRequest struct {
 	// Minimum CLTV expiry delta to use for the last HTLC in the route.
 	MinFinalCLTVExpiryDelta uint16
 
-	// taggedFields keeps track of the order the tagged fields were specified in
-	// so we can include them in the same order in the bech32 encoding of the
-	// payment request.
-	taggedFields []TaggedFieldType
-
 	RoutingHints []*lntypes.RoutingHint
 
 	// PaymentMetadata is additional metadata to attach to the payment. This
@@ -44,6 +39,11 @@ type PaymentRequest struct {
 	// from/to the bech32 encoded payment request when we encounter another `r`
 	// tagged field. It is initialized before reading/writing the tagged fields.
 	routingHintNext func() (*lntypes.RoutingHint, bool)
+
+	// taggedFields keeps track of the order the tagged fields were specified in
+	// so we can include them in the same order in the bech32 encoding of the
+	// payment request.
+	taggedFields []TaggedFieldType
 }
 
 type TaggedField struct {
