@@ -8,6 +8,10 @@ import (
 
 type Hash [32]byte
 
+func (h *Hash) Bytes() []byte {
+	return h[:]
+}
+
 func (h *Hash) IsZero() bool {
 	return *h == [32]byte{}
 }

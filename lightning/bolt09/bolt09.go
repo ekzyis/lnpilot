@@ -99,6 +99,15 @@ func (fv *FeatureVector) Bytes() []byte {
 	return b
 }
 
+func (fv *FeatureVector) Bits() []FeatureBit {
+	keys := make([]FeatureBit, 0, len(fv.features))
+	for bit := range fv.features {
+		keys = append(keys, bit)
+	}
+	slices.Sort(keys)
+	return keys
+}
+
 // EncodeBolt11 returns the bytes of the feature vector in base32 encoding,
 // big-endian order. It will throw an error if the "it's okay to be odd"-rule
 // is violated.
@@ -150,4 +159,56 @@ func (b *FeatureBit) IsUnknown() bool {
 // IsRequired returns true if the feature bit is required, which means it's an even bit.
 func (b *FeatureBit) IsRequired() bool {
 	return *b%2 == 0
+}
+
+func (b *FeatureBit) Name() string {
+	v := *b
+	switch v {
+	case DataLossProtectRequired, DataLossProtectOptional:
+		return "option_data_loss_protect"
+	case UpfrontShutdownScriptRequired, UpfrontShutdownScriptOptional:
+		return "option_upfront_shutdown_script"
+	case GossipQueriesRequired, GossipQueriesOptional:
+		return "gossip_queries"
+	case VarOnionOptinRequired, VarOnionOptinOptional:
+		return "var_onion_optin"
+	case GossipQueriesExtendedRequired, GossipQueriesExtendedOptional:
+		return "gossip_queries_ex"
+	case StaticRemotekeyRequired, StaticRemotekeyOptional:
+		return "option_static_remotekey"
+	case PaymentSecretRequired, PaymentSecretOptional:
+		return "payment_secret"
+	case BasicMppRequired, BasicMppOptional:
+		return "basic_mpp"
+	case SupportLargeChannelRequired, SupportLargeChannelOptional:
+		return "option_support_large_channel"
+	case AnchorsRequired, AnchorsOptional:
+		return "option_anchors"
+	case RouteBlindingRequired, RouteBlindingOptional:
+		return "option_route_blinding"
+	case ShutdownAnysegwitRequired, ShutdownAnysegwitOptional:
+		return "option_shutdown_anysegwit"
+	case DualFundRequired, DualFundOptional:
+		return "option_dual_fund"
+	case QuiesceRequired, QuiesceOptional:
+		return "option_quiesce"
+	case AttributionDataRequired, AttributionDataOptional:
+		return "option_attribution_data"
+	case OnionMessagesRequired, OnionMessagesOptional:
+		return "option_onion_messages"
+	case ProvideStorageRequired, ProvideStorageOptional:
+		return "option_provide_storage"
+	case ChannelTypeRequired, ChannelTypeOptional:
+		return "option_channel_type"
+	case ScidAliasRequired, ScidAliasOptional:
+		return "option_scid_alias"
+	case PaymentMetadataRequired, PaymentMetadataOptional:
+		return "option_payment_metadata"
+	case ZeroconfRequired, ZeroconfOptional:
+		return "option_zeroconf"
+	case SimpleCloseRequired, SimpleCloseOptional:
+		return "option_simple_close"
+	default:
+		return "unknown"
+	}
 }

@@ -16,6 +16,7 @@ func NewMainPane() *MainPane {
 		selected: -1,
 		panes: map[int]Pane{
 			-1: newSplashPane(),
+			0:  newBolt11Pane(),
 		},
 	}
 }
@@ -25,6 +26,9 @@ func (p *MainPane) SetSelected(selected int) {
 }
 
 func (p *MainPane) OnMessage(msg tea.Msg) tea.Cmd {
+	if pane, ok := p.panes[p.selected]; ok {
+		return pane.OnMessage(msg)
+	}
 	return nil
 }
 

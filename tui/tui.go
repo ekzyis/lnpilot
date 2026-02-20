@@ -63,7 +63,12 @@ func (m *initialModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if cmd = handleGlobalKey(msg); cmd != nil {
 			return m, cmd
 		}
-		_ = m.sidePane.OnMessage(msg)
+		if m.sidePane.Selected() >= 0 {
+			cmd = m.mainPane.OnMessage(msg)
+		} else {
+			// TODO: navigate back to side pane somehow
+			_ = m.sidePane.OnMessage(msg)
+		}
 	}
 	m.mainPane.SetSelected(m.sidePane.Selected())
 	return m, cmd
