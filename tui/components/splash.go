@@ -27,17 +27,22 @@ func (p *splashPane) OnMessage(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-func (p *splashPane) Render() string {
-	return lipgloss.JoinVertical(
-		lipgloss.Center,
-		banner,
-		lipgloss.NewStyle().
-			PaddingTop(1).
-			Render("your lightning node cockpit"),
-		lipgloss.NewStyle().
-			Foreground(color.Muted).
-			Padding(1).
-			// TODO: 'press :q to quit'
-			Render("press q to quit"),
-	)
+func (p *splashPane) Render(style lipgloss.Style) string {
+	return style.
+		AlignHorizontal(lipgloss.Center).
+		AlignVertical(lipgloss.Center).
+		Render(
+			lipgloss.JoinVertical(
+				lipgloss.Center,
+				banner,
+				lipgloss.NewStyle().
+					PaddingTop(1).
+					Render("your lightning node cockpit"),
+				lipgloss.NewStyle().
+					Foreground(color.Muted).
+					Padding(1).
+					// TODO: 'press :q to quit'
+					Render("press q to quit"),
+			),
+		)
 }

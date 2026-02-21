@@ -57,9 +57,8 @@ func (p *SidePane) OnMessage(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-func (p *SidePane) Render() string {
+func (p *SidePane) Render(style lipgloss.Style) string {
 	var (
-		style       = lipgloss.NewStyle().Padding(1)
 		headerStyle = lipgloss.NewStyle().Bold(true).PaddingBottom(1)
 		content     []string
 	)
@@ -69,12 +68,14 @@ func (p *SidePane) Render() string {
 		content = append(content, item.render(i == p.selected))
 	}
 
-	return style.Render(
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			content...,
-		),
-	)
+	return style.
+		Padding(1).
+		Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				content...,
+			),
+		)
 }
 
 func (i *item) render(selected bool) string {

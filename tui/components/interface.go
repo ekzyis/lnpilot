@@ -1,6 +1,9 @@
 package components
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+)
 
 type Renderable interface {
 	Render() string
@@ -8,5 +11,5 @@ type Renderable interface {
 
 type Pane interface {
 	OnMessage(msg tea.Msg) tea.Cmd
-	Render() string
+	Render(style lipgloss.Style) string
 }

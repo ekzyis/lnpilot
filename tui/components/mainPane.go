@@ -2,6 +2,7 @@ package components
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type MainPane struct {
@@ -32,9 +33,9 @@ func (p *MainPane) OnMessage(msg tea.Msg) tea.Cmd {
 	return nil
 }
 
-func (p *MainPane) Render() string {
+func (p *MainPane) Render(style lipgloss.Style) string {
 	if pane, ok := p.panes[p.selected]; ok {
-		return pane.Render()
+		return pane.Render(style)
 	}
 	return ""
 }

@@ -22,7 +22,9 @@ var _ Pane = (*bolt11Pane)(nil)
 
 func newBolt11Pane() *bolt11Pane {
 	const (
-		width = 80
+		// Width of the textarea. It must be wide enough to not cause layout
+		// shift when we render the invoice details.
+		width = 90
 		lines = 6
 	)
 	t := textarea.New()
@@ -60,15 +62,19 @@ func (p *bolt11Pane) OnMessage(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (p *bolt11Pane) Render() string {
-	style := lipgloss.NewStyle().Padding(1)
+func (p *bolt11Pane) Render(style lipgloss.Style) string {
 	headerStyle := lipgloss.NewStyle().Bold(true).PaddingBottom(1)
-
-	return style.Render(lipgloss.JoinVertical(lipgloss.Left,
-		headerStyle.Render("bolt11 decoder"),
-		p.textarea.View(),
-		invoiceDetails(p.invoice),
-	))
+	return style.
+		AlignHorizontal(lipgloss.Center).
+		Padding(1).
+		Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				headerStyle.Render("bolt11 decoder"),
+				p.textarea.View(),
+				invoiceDetails(p.invoice),
+			),
+		)
 }
 
 func invoiceDetails(inv *bolt11.PaymentRequest) string {

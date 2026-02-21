@@ -33,24 +33,20 @@ func (m *initialModel) Init() tea.Cmd {
 }
 
 func (m *initialModel) View() string {
+	style := lipgloss.NewStyle()
 	sidePaneWidth := 40
-	sidePane := lipgloss.NewStyle().
-		Width(sidePaneWidth).
-		Height(m.height).
-		AlignVertical(lipgloss.Top).
-		Render(m.sidePane.Render())
-	mainPane := lipgloss.NewStyle().
-		Width(m.width - sidePaneWidth).
-		Height(m.height).
-		PaddingRight(sidePaneWidth).
-		AlignHorizontal(lipgloss.Center).
-		AlignVertical(lipgloss.Center).
-		Render(m.mainPane.Render())
-	return lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		sidePane,
-		mainPane,
+	sidePane := m.sidePane.Render(
+		style.
+			Width(sidePaneWidth).
+			Height(m.height),
 	)
+	mainPane := m.mainPane.Render(
+		style.
+			Width(m.width - sidePaneWidth).
+			Height(m.height).
+			PaddingRight(sidePaneWidth),
+	)
+	return lipgloss.JoinHorizontal(lipgloss.Top, sidePane, mainPane)
 }
 
 func (m *initialModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
