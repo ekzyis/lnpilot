@@ -357,7 +357,7 @@ type BytesBolt11Decoder struct {
 }
 
 type PublicKeyBolt11Decoder struct {
-	pubKey **secp256k1.PublicKey
+	pubKey *secp256k1.PublicKey
 }
 
 type RoutingHintBolt11Decoder struct {
@@ -413,7 +413,7 @@ func (d PublicKeyBolt11Decoder) DecodeBolt11(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*d.pubKey, err = secp256k1.ParsePubKey(decoded)
+	d.pubKey, err = secp256k1.ParsePubKey(decoded)
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func NewBytesBolt11Decoder(bytes *[]byte) Bolt11Decoder {
 	return BytesBolt11Decoder{bytes: bytes}
 }
 
-func NewPublicKeyBolt11Decoder(pubKey **secp256k1.PublicKey) Bolt11Decoder {
+func NewPublicKeyBolt11Decoder(pubKey *secp256k1.PublicKey) Bolt11Decoder {
 	return PublicKeyBolt11Decoder{pubKey: pubKey}
 }
 
@@ -705,7 +705,8 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 	case fieldTypeC:
 		return NewUintBolt11Decoder(&pr.MinFinalCLTVExpiryDelta), nil
 	case fieldTypeN:
-		return NewPublicKeyBolt11Decoder(&pr.PublicKey), nil
+		pr.PublicKey = new(secp256k1.PublicKey)
+		return NewPublicKeyBolt11Decoder(pr.PublicKey), nil
 	}
 
 	return nil, errUnknownFieldType
