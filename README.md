@@ -8,7 +8,7 @@
       /_/
 ```
 
-lightning node that exposes all the things
+your lightning node cockpit
 
 ## What is this??
 
@@ -26,12 +26,7 @@ You should then see this screen:
 
 ![](./img/splash.png)
 
-There isn't much more yet.
-
 ## Tests
 
 To run the tests, run `make test` or `go test ./...` if you don't have `make`.
 
----
-
-<sub>last updated: Jan 8, 2026</sub>
