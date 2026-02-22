@@ -22,9 +22,9 @@ import (
 var (
 	errFieldDataNotFound     = errors.New("field data not found")
 	errUnknownFieldType      = errors.New("unknown field type")
-	ErrInvalidSignature      = errors.New("invalid signature")
-	ErrInvalidHRP            = errors.New("invalid hrp")
-	ErrInvalidPaymentRequest = errors.New("invalid payment request")
+	errInvalidSignature      = errors.New("invalid signature")
+	errInvalidHRP            = errors.New("invalid hrp")
+	errInvalidPaymentRequest = errors.New("invalid payment request")
 )
 
 // ======================
@@ -512,12 +512,12 @@ func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 	msg := append([]byte(hrp), tfBase32...)
 	// TODO: this always performs public key recovery, but we must use `n` if provided
 	if !sig.Verify(msg) {
-		return nil, ErrInvalidSignature
+		return nil, errInvalidSignature
 	}
 
 	// signatures must be low-S if `n` is provided
 	if pr.PublicKey != nil && sig.IsHighS() {
-		return nil, ErrInvalidSignature
+		return nil, errInvalidSignature
 	}
 
 	err = pr.validate()
@@ -544,7 +544,7 @@ func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
 	if len(matches) != 1 && len(matches) != 3 {
 		// must always match prefix, amount and multiplier are optional but must
 		// match together
-		return fmt.Errorf("%w: invalid format: %s", ErrInvalidHRP, hrp)
+		return fmt.Errorf("%w: invalid format: %s", errInvalidHRP, hrp)
 	}
 
 	for key, value := range matches {
@@ -552,12 +552,12 @@ func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
 		case "prefix":
 			network, err = lntypes.DecodeNetworkPrefix(value)
 			if err != nil {
-				return fmt.Errorf("%w: failed to decode network prefix: %w", ErrInvalidHRP, err)
+				return fmt.Errorf("%w: failed to decode network prefix: %w", errInvalidHRP, err)
 			}
 		case "amount":
 			numAmt, err := strconv.ParseUint(value, 10, 64)
 			if err != nil {
-				return fmt.Errorf("%w: failed to parse amount: %w", ErrInvalidHRP, err)
+				return fmt.Errorf("%w: failed to parse amount: %w", errInvalidHRP, err)
 			}
 			amt = lntypes.Bitcoin(numAmt)
 		case "multiplier":
@@ -572,7 +572,7 @@ func (pr *PaymentRequest) decodeHumanReadablePart(hrp string) error {
 	}
 
 	if multiplier == lntypes.MultiplierPico && amt%10 != 0 {
-		return fmt.Errorf("%w: invalid sub-millisatoshi amount: %d%s", ErrInvalidHRP, amt, multiplier)
+		return fmt.Errorf("%w: invalid sub-millisatoshi amount: %d%s", errInvalidHRP, amt, multiplier)
 	}
 
 	var picoBitcoins uint64

@@ -83,16 +83,16 @@ func (pr *PaymentRequest) sign(signer secp256k1.Signer, buf *bytes.Buffer, hrp s
 // hash, payment secret, description or description hash.
 func (pr *PaymentRequest) validate() error {
 	if pr.PaymentSecret.IsZero() {
-		return fmt.Errorf("%w: payment secret missing", ErrInvalidPaymentRequest)
+		return fmt.Errorf("%w: payment secret missing", errInvalidPaymentRequest)
 	}
 	if pr.PaymentHash.IsZero() {
-		return fmt.Errorf("%w: payment hash missing", ErrInvalidPaymentRequest)
+		return fmt.Errorf("%w: payment hash missing", errInvalidPaymentRequest)
 	}
 	if pr.Description == nil && pr.DescriptionHash.IsZero() {
-		return fmt.Errorf("%w: description and description hash are both missing", ErrInvalidPaymentRequest)
+		return fmt.Errorf("%w: description and description hash are both missing", errInvalidPaymentRequest)
 	}
 	if pr.Description != nil && !pr.DescriptionHash.IsZero() {
-		return fmt.Errorf("%w: description and description hash are both present", ErrInvalidPaymentRequest)
+		return fmt.Errorf("%w: description and description hash are both present", errInvalidPaymentRequest)
 	}
 	return nil
 }

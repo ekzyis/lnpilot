@@ -711,7 +711,7 @@ func TestPaymentRequest_Invalid_Spec_021(t *testing.T) {
 	assert := assert.New(t)
 	encoded := "lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpusp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqwgt7mcn5yqw3yx0w94pswkpq6j9uh6xfqqqtsk4tnarugeektd4hg5975x9am52rz4qskukxdmjemg92vvqz8nvmsye63r5ykel43pgz7zq0g2"
 	_, err := DecodePaymentRequest(encoded)
-	assert.ErrorIs(err, ErrInvalidSignature)
+	assert.ErrorIs(err, errInvalidSignature)
 }
 
 func TestPaymentRequest_Invalid_Spec_022(t *testing.T) {
@@ -727,7 +727,7 @@ func TestPaymentRequest_Invalid_Spec_023(t *testing.T) {
 	assert := assert.New(t)
 	encoded := "lnbc2500x1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpusp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqrrzc4cvfue4zp3hggxp47ag7xnrlr8vgcmkjxk3j5jqethnumgkpqp23z9jclu3v0a7e0aruz366e9wqdykw6dxhdzcjjhldxq0w6wgqcnu43j"
 	_, err := DecodePaymentRequest(encoded)
-	assert.ErrorIs(err, ErrInvalidHRP)
+	assert.ErrorIs(err, errInvalidHRP)
 }
 
 func TestPaymentRequest_Invalid_Spec_024(t *testing.T) {
@@ -735,7 +735,7 @@ func TestPaymentRequest_Invalid_Spec_024(t *testing.T) {
 	assert := assert.New(t)
 	encoded := "lnbc2500000001p1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpusp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgq0lzc236j96a95uv0m3umg28gclm5lqxtqqwk32uuk4k6673k6n5kfvx3d2h8s295fad45fdhmusm8sjudfhlf6dcsxmfvkeywmjdkxcp99202x"
 	_, err := DecodePaymentRequest(encoded)
-	assert.ErrorIs(err, ErrInvalidHRP)
+	assert.ErrorIs(err, errInvalidHRP)
 }
 
 func TestPaymentRequest_Invalid_Spec_025(t *testing.T) {
@@ -743,7 +743,7 @@ func TestPaymentRequest_Invalid_Spec_025(t *testing.T) {
 	assert := assert.New(t)
 	encoded := "lnbc20m1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqhp58yjmdan79s6qqdhdzgynm4zwqd5d7xmw5fk98klysy043l2ahrqs9qrsgq7ea976txfraylvgzuxs8kgcw23ezlrszfnh8r6qtfpr6cxga50aj6txm9rxrydzd06dfeawfk6swupvz4erwnyutnjq7x39ymw6j38gp49qdkj"
 	_, err := DecodePaymentRequest(encoded)
-	assert.ErrorIs(err, ErrInvalidPaymentRequest)
+	assert.ErrorIs(err, errInvalidPaymentRequest)
 }
 
 func TestPaymentRequest_Invalid_Spec026(t *testing.T) {
@@ -751,7 +751,7 @@ func TestPaymentRequest_Invalid_Spec026(t *testing.T) {
 	assert := assert.New(t)
 	encoded := "lnbc25m1p70xwfzpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaqnp4q0n326hr8v9zprg8gsvezcch06gfaqqhde2aj730yg0durunfhv66sp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygsp5cfzp9ugllvk03rltd6hvndxj26ux6gcxc5azyxk060rj9tzghct5zvjlps76gx8wpq5yuu79688k8gnm2c0al6v608s96l0xzrrlqqwnzxmu"
 	_, err := DecodePaymentRequest(encoded)
-	assert.ErrorIs(err, ErrInvalidSignature)
+	assert.ErrorIs(err, errInvalidSignature)
 }
 
 func TestPaymentRequest_EmptyDescription(t *testing.T) {
