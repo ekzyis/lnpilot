@@ -462,7 +462,7 @@ func NewUintBolt11Decoder[T constraints.Unsigned](num *T) Bolt11Decoder {
 func DecodePaymentRequest(encoded string) (*PaymentRequest, error) {
 	hrp, dataBase32, err := bech32.DecodeNoLimit(encoded)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode payment request: %w", err)
+		return nil, fmt.Errorf("bech32 decode failed: %w", err)
 	}
 
 	// the data part must be the same length as the bech32 string without the
