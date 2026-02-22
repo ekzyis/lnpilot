@@ -76,7 +76,7 @@ func TestPaymentRequest_NewPaymentRequest_Defaults(t *testing.T) {
 	assert.Equalf(3600*time.Second, pr.Expiry, "expiry should be 1 hour")
 	assert.Falsef(pr.PaymentHash.IsZero(), "payment hash should be set")
 	assert.Falsef(pr.PaymentSecret.IsZero(), "payment secret should be set")
-	assert.Truef(pr.Description != "", "description should be set")
+	assert.Truef(pr.Description != nil, "description should be set")
 	assert.Truef(pr.DescriptionHash.IsZero(), "description hash should be zero")
 	assert.Truef(pr.FallbackAddress == "", "fallback address should be empty")
 
@@ -153,7 +153,7 @@ func TestPaymentRequest_NewPaymentRequest_Defaults(t *testing.T) {
 			if (*encoded)[0] != 'd' {
 				return false
 			}
-			descriptionBech32 := toBech32(fieldTypeD, NewStringBolt11Encoder(pr.Description))
+			descriptionBech32 := toBech32(fieldTypeD, NewStringBolt11Encoder(*pr.Description))
 			assert.Truef(strings.HasPrefix(*encoded, descriptionBech32), "description bech32 mismatch")
 			*encoded = strings.TrimPrefix(*encoded, descriptionBech32)
 			return true
@@ -752,4 +752,12 @@ func TestPaymentRequest_Invalid_Spec026(t *testing.T) {
 	encoded := "lnbc25m1p70xwfzpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaqnp4q0n326hr8v9zprg8gsvezcch06gfaqqhde2aj730yg0durunfhv66sp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygs9qrsgqsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygsp5cfzp9ugllvk03rltd6hvndxj26ux6gcxc5azyxk060rj9tzghct5zvjlps76gx8wpq5yuu79688k8gnm2c0al6v608s96l0xzrrlqqwnzxmu"
 	_, err := DecodePaymentRequest(encoded)
 	assert.ErrorIs(err, ErrInvalidSignature)
+}
+
+func TestPaymentRequest_EmptyDescription(t *testing.T) {
+	// Make sure we can distinguish between empty descriptions and no descriptions
+	assert := assert.New(t)
+	encoded := "lnbc1u1p5enfedpp53kwpg54pgwck0zqnkq476nx6uhvl2k685uneh5srvlh5823k00pqdqqcqzdexqzw6sp50xw5uya78zz37quzqq6325kk5c6cgvfmackkcnjhl9rh4kvsghaq9qxpqysgqcuesfgl93gz0cg2rylxx52ztkluyxak9mmh8xu2lgtuw7x5vf23znag0x9k4td65n2spgfyvd4hnlwumx8t5u9hwhp9w9m99u7w60cgpa2tr8f"
+	_, err := DecodePaymentRequest(encoded)
+	assert.NoError(err)
 }

@@ -94,8 +94,8 @@ func invoiceDetails(inv *bolt11.PaymentRequest) string {
 	fmt.Fprintf(&s, "Amount: %d msats\n", inv.Msats)
 	fmt.Fprintf(&s, "Timestamp: %s\n", inv.Timestamp)
 	fmt.Fprintf(&s, "Payment hash: %x\n", inv.PaymentHash.Bytes())
-	if inv.Description != "" {
-		fmt.Fprintf(&s, "Description: %s\n", inv.Description)
+	if inv.Description != nil {
+		fmt.Fprintf(&s, "Description: %s\n", *inv.Description)
 	}
 	if !inv.DescriptionHash.IsZero() {
 		fmt.Fprintf(&s, "Description hash: %x\n", inv.DescriptionHash.Bytes())

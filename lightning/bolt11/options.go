@@ -57,7 +57,7 @@ func WithDescription(description string) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
 		descBytes := []byte(description)
 		if len(descBytes) <= MaxDescriptionBytes {
-			pr.Description = description
+			pr.Description = &description
 			pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeD)
 
 			// clear any existing description hash
@@ -71,7 +71,7 @@ func WithDescription(description string) func(*PaymentRequest) {
 		pr.taggedFields = appendOrMoveToEnd(pr.taggedFields, fieldTypeH)
 
 		// clear any existing description
-		pr.Description = ""
+		pr.Description = nil
 		pr.taggedFields = remove(pr.taggedFields, fieldTypeD)
 	}
 }
@@ -82,7 +82,7 @@ func WithDefaultDescription() func(*PaymentRequest) {
 
 func WithDescriptionHash(descriptionHash [32]byte) func(*PaymentRequest) {
 	return func(pr *PaymentRequest) {
-		pr.Description = ""
+		pr.Description = nil
 		pr.taggedFields = remove(pr.taggedFields, fieldTypeD)
 
 		pr.DescriptionHash = lntypes.Hash(descriptionHash)

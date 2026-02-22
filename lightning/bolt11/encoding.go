@@ -241,8 +241,8 @@ func (pr *PaymentRequest) getTaggedFieldEncoder(fieldType TaggedFieldType) (Bolt
 		}
 		return nil, errFieldDataNotFound
 	case fieldTypeD:
-		if pr.Description != "" {
-			return NewStringBolt11Encoder(pr.Description), nil
+		if pr.Description != nil {
+			return NewStringBolt11Encoder(*pr.Description), nil
 		}
 		return nil, errFieldDataNotFound
 	case fieldTypeH:
@@ -686,7 +686,8 @@ func (pr *PaymentRequest) getTaggedFieldDecoder(fieldType TaggedFieldType) (Bolt
 	case fieldTypeH:
 		return &pr.DescriptionHash, nil
 	case fieldTypeD:
-		return NewStringBolt11Decoder(&pr.Description), nil
+		pr.Description = new(string)
+		return NewStringBolt11Decoder(pr.Description), nil
 	case fieldType9:
 		return &pr.Features, nil
 	case fieldTypeX:

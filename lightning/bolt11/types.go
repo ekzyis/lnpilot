@@ -22,7 +22,7 @@ type PaymentRequest struct {
 	// see https://bitcoin.stackexchange.com/a/115738
 	PaymentSecret lntypes.Hash
 
-	Description     string
+	Description     *string
 	DescriptionHash lntypes.Hash
 	Features        bolt09.FeatureVector
 	FallbackAddress string

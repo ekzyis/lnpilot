@@ -88,10 +88,10 @@ func (pr *PaymentRequest) validate() error {
 	if pr.PaymentHash.IsZero() {
 		return fmt.Errorf("%w: payment hash missing", ErrInvalidPaymentRequest)
 	}
-	if pr.Description == "" && pr.DescriptionHash.IsZero() {
+	if pr.Description == nil && pr.DescriptionHash.IsZero() {
 		return fmt.Errorf("%w: description and description hash are both missing", ErrInvalidPaymentRequest)
 	}
-	if pr.Description != "" && !pr.DescriptionHash.IsZero() {
+	if pr.Description != nil && !pr.DescriptionHash.IsZero() {
 		return fmt.Errorf("%w: description and description hash are both present", ErrInvalidPaymentRequest)
 	}
 	return nil
