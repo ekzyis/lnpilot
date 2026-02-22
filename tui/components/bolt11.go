@@ -14,8 +14,9 @@ import (
 )
 
 type bolt11Pane struct {
-	textarea textarea.Model
-	invoice  *bolt11.PaymentRequest
+	textarea   textarea.Model
+	invoice    *bolt11.PaymentRequest
+	invoiceErr error
 }
 
 var _ Pane = (*bolt11Pane)(nil)
@@ -56,9 +57,9 @@ func (p *bolt11Pane) OnMessage(msg tea.Msg) tea.Cmd {
 
 	value := p.textarea.Value()
 	if value == "" {
-		p.invoice = nil
+		p.invoice, p.invoiceErr = nil, nil
 	} else {
-		p.invoice, _ = bolt11.DecodePaymentRequest(value)
+		p.invoice, p.invoiceErr = bolt11.DecodePaymentRequest(value)
 	}
 
 	return cmd
@@ -74,17 +75,20 @@ func (p *bolt11Pane) Render(style lipgloss.Style) string {
 				lipgloss.Left,
 				headerStyle.Render("bolt11 decoder"),
 				p.textarea.View(),
-				invoiceDetails(p.invoice),
+				invoiceDetails(p.invoice, p.invoiceErr),
 			),
 		)
 }
 
-func invoiceDetails(inv *bolt11.PaymentRequest) string {
+func invoiceDetails(inv *bolt11.PaymentRequest, invErr error) string {
+	style := lipgloss.NewStyle().PaddingTop(1)
+
+	if invErr != nil {
+		return style.Foreground(lipgloss.Color("1")).Render(invErr.Error())
+	}
 	if inv == nil {
 		return ""
 	}
-
-	style := lipgloss.NewStyle().PaddingTop(1)
 
 	// TODO: show fields in same order as in invoice
 	// TODO: highlight fields
