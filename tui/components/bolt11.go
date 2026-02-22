@@ -55,7 +55,9 @@ func (p *bolt11Pane) OnMessage(msg tea.Msg) tea.Cmd {
 	p.textarea, cmd = p.textarea.Update(msg)
 
 	value := p.textarea.Value()
-	if value != "" {
+	if value == "" {
+		p.invoice = nil
+	} else {
 		p.invoice, _ = bolt11.DecodePaymentRequest(value)
 	}
 
