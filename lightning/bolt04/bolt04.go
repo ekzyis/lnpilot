@@ -84,7 +84,7 @@ func NewOnionPacket(
 	// generate the shared secrets for all hops
 	for i := range hops {
 		// perform ECDH for shared secret with this hop
-		sharedSecret := ecdh(ephemeralKey, hops[i].PubKey)
+		sharedSecret := secp256k1.ECDH(ephemeralKey, hops[i].PubKey)
 		sharedSecrets = append(sharedSecrets, sharedSecret)
 		// derive ephemeral key for ECDH with next hop
 		bf := computeBlindingFactor(ephemeralKey, sharedSecret)
@@ -218,18 +218,6 @@ func xor(a, b []byte) []byte {
 		copy(output[len(a):], b[len(a):])
 	}
 	return output
-}
-
-func ecdh(privKey *secp256k1.PrivateKey, pubKey *secp256k1.PublicKey) [32]byte {
-	// Unfortunately, secp256k1.GenerateSharedSecret() only returns X, not the
-	// compressed public key, so we perform ECDH ourselves here.
-	// TODO: provide helper function for this in lib/secp256k1
-	var point, result secp256k1.JacobianPoint
-	pubKey.AsJacobian(&point)
-	secp256k1.ScalarMultNonConst(&privKey.Key, &point, &result)
-	result.ToAffine()
-	sharedPoint := secp256k1.NewPublicKey(&result.X, &result.Y)
-	return sha256.Sum256(sharedPoint.SerializeCompressed())
 }
 
 func computeBlindingFactor(ephemeralKey *secp256k1.PrivateKey, ss [32]byte) secp256k1.ModNScalar {

@@ -77,6 +77,19 @@ func ScalarMultNonConst(k *ModNScalar, point *JacobianPoint, result *JacobianPoi
 	secp256k1.ScalarMultNonConst(k, point, result)
 }
 
+// ECDH performs Elliptic-Curve Diffie-Hellman as defined by BOLT #8: it
+// multiplies the public key by the private key and returns the SHA256 hash of
+// the compressed shared point. Note this differs from
+// secp256k1.GenerateSharedSecret(), which only returns the X coordinate.
+func ECDH(privKey *PrivateKey, pubKey *PublicKey) [32]byte {
+	var point, result JacobianPoint
+	pubKey.AsJacobian(&point)
+	ScalarMultNonConst(&privKey.Key, &point, &result)
+	result.ToAffine()
+	sharedPoint := NewPublicKey(&result.X, &result.Y)
+	return sha256.Sum256(sharedPoint.SerializeCompressed())
+}
+
 // CompactECDSASign returns a deterministic, compact, low-S ECDSA signature over
 // secp256k1 according to RFC6979 and BIP62. The message will be hashed using
 // sha256 before signing. The signature will reference a compressed public key.
